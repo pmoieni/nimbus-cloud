@@ -27,8 +27,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createFileStmt, err = db.PrepareContext(ctx, createFile); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateFile: %w", err)
 	}
-	if q.deleteFileStmt, err = db.PrepareContext(ctx, deleteFile); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteFile: %w", err)
+	if q.deleteFileByIDStmt, err = db.PrepareContext(ctx, deleteFileByID); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteFileByID: %w", err)
+	}
+	if q.deleteFileByObjectNameStmt, err = db.PrepareContext(ctx, deleteFileByObjectName); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteFileByObjectName: %w", err)
 	}
 	if q.getFileByIDStmt, err = db.PrepareContext(ctx, getFileByID); err != nil {
 		return nil, fmt.Errorf("error preparing query GetFileByID: %w", err)
@@ -55,9 +58,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createFileStmt: %w", cerr)
 		}
 	}
-	if q.deleteFileStmt != nil {
-		if cerr := q.deleteFileStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteFileStmt: %w", cerr)
+	if q.deleteFileByIDStmt != nil {
+		if cerr := q.deleteFileByIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteFileByIDStmt: %w", cerr)
+		}
+	}
+	if q.deleteFileByObjectNameStmt != nil {
+		if cerr := q.deleteFileByObjectNameStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteFileByObjectNameStmt: %w", cerr)
 		}
 	}
 	if q.getFileByIDStmt != nil {
@@ -122,27 +130,29 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                      DBTX
-	tx                      *sql.Tx
-	createFileStmt          *sql.Stmt
-	deleteFileStmt          *sql.Stmt
-	getFileByIDStmt         *sql.Stmt
-	getFileByNameStmt       *sql.Stmt
-	getFileByObjectNameStmt *sql.Stmt
-	listFilesStmt           *sql.Stmt
-	listOwnerFilesStmt      *sql.Stmt
+	db                         DBTX
+	tx                         *sql.Tx
+	createFileStmt             *sql.Stmt
+	deleteFileByIDStmt         *sql.Stmt
+	deleteFileByObjectNameStmt *sql.Stmt
+	getFileByIDStmt            *sql.Stmt
+	getFileByNameStmt          *sql.Stmt
+	getFileByObjectNameStmt    *sql.Stmt
+	listFilesStmt              *sql.Stmt
+	listOwnerFilesStmt         *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                      tx,
-		tx:                      tx,
-		createFileStmt:          q.createFileStmt,
-		deleteFileStmt:          q.deleteFileStmt,
-		getFileByIDStmt:         q.getFileByIDStmt,
-		getFileByNameStmt:       q.getFileByNameStmt,
-		getFileByObjectNameStmt: q.getFileByObjectNameStmt,
-		listFilesStmt:           q.listFilesStmt,
-		listOwnerFilesStmt:      q.listOwnerFilesStmt,
+		db:                         tx,
+		tx:                         tx,
+		createFileStmt:             q.createFileStmt,
+		deleteFileByIDStmt:         q.deleteFileByIDStmt,
+		deleteFileByObjectNameStmt: q.deleteFileByObjectNameStmt,
+		getFileByIDStmt:            q.getFileByIDStmt,
+		getFileByNameStmt:          q.getFileByNameStmt,
+		getFileByObjectNameStmt:    q.getFileByObjectNameStmt,
+		listFilesStmt:              q.listFilesStmt,
+		listOwnerFilesStmt:         q.listOwnerFilesStmt,
 	}
 }

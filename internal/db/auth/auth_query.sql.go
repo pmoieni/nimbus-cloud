@@ -127,3 +127,50 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 	}
 	return items, nil
 }
+
+const updateUser = `-- name: UpdateUser :execresult
+UPDATE users
+    SET email = ?,
+    password = ?
+    WHERE id = ?
+`
+
+type UpdateUserParams struct {
+	Email    string `db:"email" json:"email"`
+	Password string `db:"password" json:"password"`
+	ID       int64  `db:"id" json:"id"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg *UpdateUserParams) (sql.Result, error) {
+	return q.exec(ctx, q.updateUserStmt, updateUser, arg.Email, arg.Password, arg.ID)
+}
+
+const updateUserEmail = `-- name: UpdateUserEmail :execresult
+UPDATE users
+    SET email = ?
+    WHERE id = ?
+`
+
+type UpdateUserEmailParams struct {
+	Email string `db:"email" json:"email"`
+	ID    int64  `db:"id" json:"id"`
+}
+
+func (q *Queries) UpdateUserEmail(ctx context.Context, arg *UpdateUserEmailParams) (sql.Result, error) {
+	return q.exec(ctx, q.updateUserEmailStmt, updateUserEmail, arg.Email, arg.ID)
+}
+
+const updateUserPassword = `-- name: UpdateUserPassword :execresult
+UPDATE users
+    SET email = ?
+    WHERE id = ?
+`
+
+type UpdateUserPasswordParams struct {
+	Email string `db:"email" json:"email"`
+	ID    int64  `db:"id" json:"id"`
+}
+
+func (q *Queries) UpdateUserPassword(ctx context.Context, arg *UpdateUserPasswordParams) (sql.Result, error) {
+	return q.exec(ctx, q.updateUserPasswordStmt, updateUserPassword, arg.Email, arg.ID)
+}

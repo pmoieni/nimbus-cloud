@@ -39,6 +39,15 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.listUsersStmt, err = db.PrepareContext(ctx, listUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query ListUsers: %w", err)
 	}
+	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
+	}
+	if q.updateUserEmailStmt, err = db.PrepareContext(ctx, updateUserEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUserEmail: %w", err)
+	}
+	if q.updateUserPasswordStmt, err = db.PrepareContext(ctx, updateUserPassword); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUserPassword: %w", err)
+	}
 	return &q, nil
 }
 
@@ -67,6 +76,21 @@ func (q *Queries) Close() error {
 	if q.listUsersStmt != nil {
 		if cerr := q.listUsersStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listUsersStmt: %w", cerr)
+		}
+	}
+	if q.updateUserStmt != nil {
+		if cerr := q.updateUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserStmt: %w", cerr)
+		}
+	}
+	if q.updateUserEmailStmt != nil {
+		if cerr := q.updateUserEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserEmailStmt: %w", cerr)
+		}
+	}
+	if q.updateUserPasswordStmt != nil {
+		if cerr := q.updateUserPasswordStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserPasswordStmt: %w", cerr)
 		}
 	}
 	return err
@@ -106,23 +130,29 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                 DBTX
-	tx                 *sql.Tx
-	createUserStmt     *sql.Stmt
-	deleteUserStmt     *sql.Stmt
-	getUserByEmailStmt *sql.Stmt
-	getUserByIDStmt    *sql.Stmt
-	listUsersStmt      *sql.Stmt
+	db                     DBTX
+	tx                     *sql.Tx
+	createUserStmt         *sql.Stmt
+	deleteUserStmt         *sql.Stmt
+	getUserByEmailStmt     *sql.Stmt
+	getUserByIDStmt        *sql.Stmt
+	listUsersStmt          *sql.Stmt
+	updateUserStmt         *sql.Stmt
+	updateUserEmailStmt    *sql.Stmt
+	updateUserPasswordStmt *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                 tx,
-		tx:                 tx,
-		createUserStmt:     q.createUserStmt,
-		deleteUserStmt:     q.deleteUserStmt,
-		getUserByEmailStmt: q.getUserByEmailStmt,
-		getUserByIDStmt:    q.getUserByIDStmt,
-		listUsersStmt:      q.listUsersStmt,
+		db:                     tx,
+		tx:                     tx,
+		createUserStmt:         q.createUserStmt,
+		deleteUserStmt:         q.deleteUserStmt,
+		getUserByEmailStmt:     q.getUserByEmailStmt,
+		getUserByIDStmt:        q.getUserByIDStmt,
+		listUsersStmt:          q.listUsersStmt,
+		updateUserStmt:         q.updateUserStmt,
+		updateUserEmailStmt:    q.updateUserEmailStmt,
+		updateUserPasswordStmt: q.updateUserPasswordStmt,
 	}
 }

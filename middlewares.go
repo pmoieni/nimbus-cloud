@@ -38,7 +38,7 @@ func (s *AuthService) CheckAuth(next http.Handler) http.Handler {
 	})
 }
 
-var fileNameCtxKey = ctxKey("file-name")
+var fileInfoCtxKey = ctxKey("file-info")
 
 func (s *StoreService) CheckFilePermission(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +63,7 @@ func (s *StoreService) CheckFilePermission(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), fileNameCtxKey, fileInfo.Name)
+		ctx := context.WithValue(r.Context(), fileInfoCtxKey, fileInfo)
 		if fileInfo.Owner != userInfo.ID {
 			permittedFiles, err := fq.ListPermittedFiles(context.Background(), userInfo.ID)
 			if err != nil {
@@ -108,7 +108,7 @@ func (s *StoreService) CheckFileOwner(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), fileNameCtxKey, fileInfo.Name)
+		ctx := context.WithValue(r.Context(), fileInfoCtxKey, fileInfo)
 		if fileInfo.Owner != userInfo.ID {
 			w.WriteHeader(http.StatusForbidden)
 			return

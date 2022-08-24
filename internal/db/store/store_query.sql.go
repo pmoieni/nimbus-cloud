@@ -43,13 +43,23 @@ func (q *Queries) CreateFile(ctx context.Context, arg *CreateFileParams) (sql.Re
 	)
 }
 
-const deleteFile = `-- name: DeleteFile :exec
+const deleteFileByID = `-- name: DeleteFileByID :exec
 DELETE FROM files
 WHERE id = ?
 `
 
-func (q *Queries) DeleteFile(ctx context.Context, id int64) error {
-	_, err := q.exec(ctx, q.deleteFileStmt, deleteFile, id)
+func (q *Queries) DeleteFileByID(ctx context.Context, id int64) error {
+	_, err := q.exec(ctx, q.deleteFileByIDStmt, deleteFileByID, id)
+	return err
+}
+
+const deleteFileByObjectName = `-- name: DeleteFileByObjectName :exec
+DELETE FROM files
+WHERE object_name = ?
+`
+
+func (q *Queries) DeleteFileByObjectName(ctx context.Context, objectName string) error {
+	_, err := q.exec(ctx, q.deleteFileByObjectNameStmt, deleteFileByObjectName, objectName)
 	return err
 }
 

@@ -54,13 +54,19 @@ func main() {
 		Password: viper.GetString("REDIS_PASSWORD"),
 		DB:       1,
 	})
+	ptdb := redis.NewClient(&redis.Options{
+		Addr:     viper.GetString("REDIS_ADDR"),
+		Password: viper.GetString("REDIS_PASSWORD"),
+		DB:       2,
+	})
 	storeService := nbc.StoreService{
 		DBCon: db,
 	}
 	authService := nbc.AuthService{
-		DBCon:               db,
-		RedisRefreshTokenDB: rtdb,
-		RedisClientIDDB:     itdb,
+		DBCon:                db,
+		RedisRefreshTokenDB:  rtdb,
+		RedisClientIDDB:      itdb,
+		RedisPasswordTokenDB: ptdb,
 	}
 	server := nbc.Server{
 		Port:   ":8080",
@@ -71,12 +77,18 @@ func main() {
 		r.Use(middleware.Logger)
 		r.Route("/store", func(r chi.Router) {
 			r.Use(authService.CheckAuth)
+			r.Get("/", storeService.GetUserFiles)
 			r.Post("/upload", storeService.Upload)
 			r.Route("/{name}", func(r chi.Router) {
 				r.Use(storeService.CheckFilePermission)
-				r.Get("/download", storeService.Download)
+				r.Get("/", storeService.Download)
+				r.Group(func(r chi.Router) {
+					r.Use(storeService.CheckFileOwner)
+					r.Delete("/", storeService.Delete)
+					r.Get("/users", storeService.GetPermittedUsersEmails)
+					r.Post("/share", storeService.PermitUsers)
+				})
 			})
-			r.Post("/share", storeService.PermitUsers)
 		})
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/register", authService.Register)
@@ -84,8 +96,9 @@ func main() {
 			r.Get("/refresh_token", authService.RefreshToken)
 			r.Get("/logout", authService.Logout)
 		})
-		r.Route("/account", func(r chi.Router) {
+		r.Route("/users", func(r chi.Router) {
 			r.Use(authService.CheckAuth)
+			r.Get("/", authService.GetUsersEmailList)
 			r.Get("/me", authService.GetUserInfo)
 		})
 	})

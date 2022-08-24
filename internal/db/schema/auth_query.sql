@@ -25,6 +25,22 @@ INSERT INTO users (
     )
 VALUES (?, ?, ?, ?, ?);
 
+-- name: UpdateUser :execresult
+UPDATE users
+    SET email = ?,
+    password = ?
+    WHERE id = ?;
+
+-- name: UpdateUserEmail :execresult
+UPDATE users
+    SET email = ?
+    WHERE id = ?;
+
+-- name: UpdateUserPassword :execresult
+UPDATE users
+    SET email = ?
+    WHERE id = ?;
+
 -- name: DeleteUser :exec
 DELETE FROM users
 WHERE id = ?;

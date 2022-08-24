@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"net/mail"
+	"strings"
 	"time"
 	"unicode"
 
@@ -21,9 +22,10 @@ import (
 )
 
 type AuthService struct {
-	DBCon               *sql.DB
-	RedisRefreshTokenDB *redis.Client
-	RedisClientIDDB     *redis.Client
+	DBCon                *sql.DB
+	RedisRefreshTokenDB  *redis.Client
+	RedisClientIDDB      *redis.Client
+	RedisPasswordTokenDB *redis.Client
 }
 
 const (
@@ -73,10 +75,11 @@ func (s *AuthService) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &rtCookie)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = req.WriteJSON(w, res)
+	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -124,8 +127,13 @@ func (s *AuthService) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &newRTCookie)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	req.WriteJSON(w, res)
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (s *AuthService) Logout(w http.ResponseWriter, r *http.Request) {
@@ -144,6 +152,28 @@ func (s *AuthService) Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (s *AuthService) GetUsersEmailList(w http.ResponseWriter, r *http.Request) {
+	q := auth.New(s.DBCon)
+	users, err := q.ListUsers(context.Background())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res := usersEmailListRes{}
+	for _, user := range users {
+		res.Users = append(res.Users, user.Email)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func (s *AuthService) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	email, ok := r.Context().Value(emailCtxKey).(string)
 	if !ok {
@@ -157,8 +187,33 @@ func (s *AuthService) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	req.WriteJSON(w, user)
+	err = json.NewEncoder(w).Encode(user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (s *AuthService) UpdateUserInfo(w http.ResponseWriter, r *http.Request) {
+	email, ok := r.Context().Value(emailCtxKey).(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	newUserInfo := auth.User{}
+	if err := req.Parse(r, &newUserInfo); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err := s.updateUserInfo(email, &newUserInfo)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // ------------------------ SERVICE -------------------------------
@@ -211,8 +266,6 @@ func (s *AuthService) register(u *auth.User) error {
 		return err
 	}
 	user.Password = string(hashedPassword)
-	user.CreatedAt = time.Now().UTC()
-	user.UpdatedAt = sql.NullTime{Time: time.Now().UTC(), Valid: true}
 
 	ctx := context.Background()
 	q := auth.New(s.DBCon)
@@ -559,4 +612,40 @@ func (s *AuthService) getUserInfo(email string) (auth.User, error) {
 	}
 
 	return user, nil
+}
+
+func (s *AuthService) updateUserInfo(email string, u *auth.User) error {
+	q := auth.New(s.DBCon)
+	user, err := q.GetUserByEmail(context.Background(), email)
+	if err != nil {
+		return err
+	}
+
+	updateUser := auth.UpdateUserParams{}
+	updateUser.ID = user.ID
+	if isEmptyString(u.Email) {
+		updateUser.Email = user.Email
+	} else {
+		updateUser.Email = u.Email
+	}
+	if isEmptyString(u.Password) {
+		updateUser.Password = user.Password
+	} else {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		updateUser.Password = string(hashedPassword)
+	}
+
+	_, err = q.UpdateUser(context.Background(), &updateUser)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func isEmptyString(s string) bool {
+	return len(strings.TrimSpace(s)) == 0
 }

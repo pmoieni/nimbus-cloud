@@ -38,6 +38,10 @@ INSERT INTO files (
     )
 VALUES (?, ?, ?, ?, ?, ?);
 
--- name: DeleteFile :exec
+-- name: DeleteFileByID :exec
 DELETE FROM files
 WHERE id = ?;
+
+-- name: DeleteFileByObjectName :exec
+DELETE FROM files
+WHERE object_name = ?;

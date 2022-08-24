@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"io"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -24,18 +24,11 @@ type StoreService struct {
 
 type (
 	permitUsersReq struct {
-		Files []string `json:"files"`
 		Users []string `json:"users"`
-	}
-	getUserFilesReq struct {
-		UserID int64 `json:"user_id"`
 	}
 	getUserFilesRes struct {
 		UserFiles      []store.File `json:"user_files"`
 		PermittedFiles []store.File `json:"permitted_files"`
-	}
-	downloadReq struct {
-		ObjectName string `json:"object_name"`
 	}
 )
 
@@ -120,18 +113,25 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *StoreService) GetUserFiles(w http.ResponseWriter, r *http.Request) {
-	p := getUserFilesReq{}
-	if err := req.Parse(r, &p); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	email, ok := r.Context().Value(emailCtxKey).(string)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	userFiles, err := s.getUserFiles(p.UserID)
+	q := auth.New(s.DBCon)
+	user, err := q.GetUserByEmail(context.Background(), email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	permittedFiles, err := s.getUserPermittedFiles(p.UserID)
+
+	userFiles, err := s.getUserFiles(user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	permittedFiles, err := s.getUserPermittedFiles(user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -142,11 +142,17 @@ func (s *StoreService) GetUserFiles(w http.ResponseWriter, r *http.Request) {
 		PermittedFiles: permittedFiles,
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	req.WriteJSON(w, res)
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (s *StoreService) PermitUsers(w http.ResponseWriter, r *http.Request) {
+	on := chi.URLParam(r, "name")
 	email, ok := r.Context().Value(emailCtxKey).(string)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
@@ -168,41 +174,32 @@ func (s *StoreService) PermitUsers(w http.ResponseWriter, r *http.Request) {
 
 	fq := store.New(s.DBCon)
 
-	for _, fileON := range p.Files {
-		fileInfo, err := fq.GetFileByObjectName(context.Background(), fileON)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if fileInfo.Owner != ownerInfo.ID {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		fileUsers, err := uq.ListPermittedUsers(context.Background(), fileInfo.ID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		usersEmails := fileUsers.GetEmails()
-		addedUsers := difference(p.Users, usersEmails)
-		for _, email := range p.Users {
+	fileInfo, err := fq.GetFileByObjectName(context.Background(), on)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	permittedUsers, err := uq.ListPermittedUsers(context.Background(), fileInfo.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	puEmails := permittedUsers.GetEmails()
+	if fileInfo.Owner != ownerInfo.ID {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	for _, email := range p.Users {
+		if !slices.Contains(puEmails, email) && email != ownerInfo.Email {
 			userInfo, err := uq.GetUserByEmail(context.Background(), email)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			if slices.Contains(addedUsers, userInfo.Email) {
-				err = s.createUserFileRelation(fileInfo.ID, userInfo.ID)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-			} else {
-				err = s.removeUserRelation(userInfo.ID)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
+			err = s.createUserFileRelation(fileInfo.ID, userInfo.ID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
 		}
 	}
@@ -210,52 +207,98 @@ func (s *StoreService) PermitUsers(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// difference returns the elements in `a` that aren't in `b`.
-func difference(a, b []string) []string {
-	mb := make(map[string]struct{}, len(b))
-	for _, x := range b {
-		mb[x] = struct{}{}
-	}
-	var diff []string
-	for _, x := range a {
-		if _, found := mb[x]; !found {
-			diff = append(diff, x)
-		}
-	}
-	return diff
-}
+// // difference returns the elements in `a` that aren't in `b`.
+// func difference(a, b []string) []string {
+// 	mb := make(map[string]struct{}, len(b))
+// 	for _, x := range b {
+// 		mb[x] = struct{}{}
+// 	}
+// 	var diff []string
+// 	for _, x := range a {
+// 		if _, found := mb[x]; !found {
+// 			diff = append(diff, x)
+// 		}
+// 	}
+// 	return diff
+// }
 
 func (s *StoreService) Download(w http.ResponseWriter, r *http.Request) {
 	on := chi.URLParam(r, "name")
-	fileName, ok := r.Context().Value(fileNameCtxKey).(string)
+	fileInfo, ok := r.Context().Value(fileInfoCtxKey).(store.File)
 	if !ok {
-		w.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileInfo.Name+"\"")
+	w.Header().Set("Content-Type", "application/octet-stream")
 	http.ServeFile(w, r, "./bucket/"+on)
 }
 
 func (s *StoreService) Delete(w http.ResponseWriter, r *http.Request) {
+	on := chi.URLParam(r, "name")
+	err := s.removeFile(on)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
+	err = os.Remove("./bucket/" + on)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
-func (s *StoreService) Purge(w http.ResponseWriter, r *http.Request) {
+func (s *StoreService) GetPermittedUsersEmails(w http.ResponseWriter, r *http.Request) {
+	on := chi.URLParam(r, "name")
+	fq := store.New(s.DBCon)
+	fileInfo, err := fq.GetFileByObjectName(context.Background(), on)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
+	uq := auth.New(s.DBCon)
+	users, err := uq.ListPermittedUsers(context.Background(), fileInfo.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res := usersEmailListRes{}
+	for _, user := range users {
+		res.Users = append(res.Users, user.Email)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // ------------------------- SERVICE -----------------------------
 func (s *StoreService) saveFile(rn, fn string, uID int64) error {
-	ctx := context.Background()
 	q := store.New(s.DBCon)
-	file := store.CreateFileParams{
-		Name:       fn,
-		ObjectName: rn,
-		Owner:      uID,
-		CreatedAt:  time.Now().UTC(),
-		UpdatedAt:  sql.NullTime{Time: time.Now().UTC(), Valid: true},
+	file := store.CreateFileParams{}
+	file.Name = fn
+	file.ObjectName = rn
+	file.Owner = uID
+	_, err := q.CreateFile(context.Background(), &file)
+	if err != nil {
+		return err
 	}
-	_, err := q.CreateFile(ctx, &file)
+
+	return nil
+}
+
+func (s *StoreService) removeFile(on string) error {
+	q := store.New(s.DBCon)
+	err := q.DeleteFileByObjectName(context.Background(), on)
 	if err != nil {
 		return err
 	}
@@ -290,8 +333,6 @@ func (s *StoreService) createUserFileRelation(fID, uID int64) error {
 	r := relation.CreateUserFileRelationParams{}
 	r.FileID = fID
 	r.UserID = uID
-	r.CreatedAt = time.Now().UTC()
-	r.UpdatedAt = sql.NullTime{Time: time.Now().UTC(), Valid: true}
 
 	_, err := q.CreateUserFileRelation(context.Background(), &r)
 	if err != nil {
