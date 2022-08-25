@@ -99,7 +99,7 @@
       width: 100%;
       height: 100%;
       max-width: 20rem;
-      max-height: 22rem;
+      max-height: 25rem;
 
       & > div {
         padding: 0.5rem;
@@ -132,6 +132,10 @@
           font-size: 1.2rem;
           border-radius: 0.3rem;
           transition: 0.3s ease;
+        }
+
+        & > :global(a) {
+          margin: 0.5rem;
         }
       }
     }
