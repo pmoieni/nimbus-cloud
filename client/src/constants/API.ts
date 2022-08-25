@@ -15,6 +15,7 @@ export const API = {
     },
     Store: {
       Base: "http://localhost:8080/api/v1/store",
+      Upload: "http://localhost:8080/api/v1/store/upload",
     },
   },
 };

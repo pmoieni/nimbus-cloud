@@ -2,41 +2,23 @@
   import Icon from "../lib/Icon.svelte";
   import StoreAPI from "../API/Store";
   import { API } from "../constants/API";
-  import ShareModal from "../lib/ShareModal.svelte";
-  import DeleteModal from "../lib/DeleteModal.svelte";
-  import { failure } from "../toast/toast";
 
   export let fileName;
   export let objectName;
-  export let refresh;
-  let showShareModal = false;
-  let showDeleteModal = false;
 
   function DownloadFile(objectName: string, fileName: string) {
     StoreAPI.get(API.Routes.Store.Base + "/" + objectName, {
       responseType: "blob",
-    })
-      .then((res) => {
-        if (res.data) {
-          const url = window.URL.createObjectURL(new Blob([res.data]));
-          const link = document.createElement("a");
-          link.href = url;
-          link.setAttribute("download", fileName); //or any other extension
-          document.body.appendChild(link);
-          link.click();
-        }
-      })
-      .catch((err) => {
-        failure("error is: " + err);
-      });
-  }
-
-  function toggleShareModal() {
-    showShareModal = !showShareModal;
-  }
-
-  function toggleDeleteModal() {
-    showDeleteModal = !showDeleteModal;
+    }).then((res) => {
+      if (res.data) {
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", fileName); //or any other extension
+        document.body.appendChild(link);
+        link.click();
+      }
+    });
   }
 </script>
 
@@ -46,21 +28,8 @@
     <button on:click={() => DownloadFile(objectName, fileName)}
       ><Icon name="download" /></button
     >
-    <button on:click={toggleDeleteModal}><Icon name="trash" /></button>
-    <button on:click={toggleShareModal}><Icon name="share-2" /></button>
   </div>
 </div>
-<ShareModal
-  toggleModal={toggleShareModal}
-  fileObjectName={objectName}
-  show={showShareModal}
-/>
-<DeleteModal
-  {refresh}
-  toggleModal={toggleDeleteModal}
-  fileObjectName={objectName}
-  show={showDeleteModal}
-/>
 
 <style lang="scss">
   .file-item {
@@ -74,6 +43,7 @@
     transition: 0.3s ease;
     border-radius: 0.3rem;
     padding: 0.5rem;
+    background-color: #f3ff84;
 
     .file-name {
       font-weight: bold;
@@ -102,6 +72,6 @@
   }
 
   .file-item:hover {
-    background-color: #dadada;
+    background-color: #b1b961;
   }
 </style>

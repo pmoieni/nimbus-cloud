@@ -47,7 +47,7 @@ UsersAPI.interceptors.response.use(
             return value;
           });
         } catch (err) {
-          navigate("/auth");
+          navigate("/auth/login");
         }
 
         return UsersAPI(originalConfig);

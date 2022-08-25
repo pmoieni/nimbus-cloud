@@ -31,7 +31,7 @@ type AuthService struct {
 const (
 	authorizationHeader    = "Authorization"
 	refreshTokenCookieName = "NBC_DIRECT_RT"
-	refreshTokenCookiePath = "/api/v1/auth"
+	refreshTokenCookiePath = "/api/v1"
 )
 
 type loginRes struct {
@@ -59,13 +59,12 @@ func (s *AuthService) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rtCookie := http.Cookie{
-		// Domain:   "example.com",
 		Path:     refreshTokenCookiePath,
 		Name:     refreshTokenCookieName,
 		Value:    tokens.refreshToken,
 		HttpOnly: true,
 		Secure:   false, // set to true in production
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 		Expires:  time.Now().UTC().Add(refreshTokenExpiry),
 	}
 
@@ -119,7 +118,7 @@ func (s *AuthService) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		Value:    tokens.refreshToken,
 		HttpOnly: true,
 		Secure:   false, // set to true in production
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 		Expires:  time.Now().UTC().Add(refreshTokenExpiry),
 	}
 	res := refreshTokenRes{
@@ -144,7 +143,7 @@ func (s *AuthService) Logout(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		HttpOnly: true,
 		Secure:   false, // set to true in production
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 		Expires:  time.Unix(0, 0),
 	}
 

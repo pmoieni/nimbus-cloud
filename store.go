@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -77,8 +78,9 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	buf := bufio.NewReader(p)
-	randName := uuid.New().String()
-	f, err := os.OpenFile("./bucket/"+randName, os.O_WRONLY|os.O_CREATE, 0666)
+	randID := uuid.New().String()
+	randName := "./bucket/" + randID
+	f, err := os.OpenFile(randName, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -97,6 +99,19 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var fileName string
+	if len(strings.TrimSpace(string(text))) > 0 {
+		parts := strings.Split(p.FileName(), ".")
+		if len(parts) > 0 {
+			extension := parts[len(parts)-1]
+			fileName = string(text) + extension
+		} else {
+			fileName = p.FileName()
+		}
+	} else {
+		fileName = p.FileName()
+	}
+
 	q := auth.New(s.DBCon)
 	user, err := q.GetUserByEmail(context.Background(), email)
 	if err != nil {
@@ -104,8 +119,7 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// f.Seek(0, io.SeekStart) // seek reader to the start to prevent EOF
-	err = s.saveFile(randName, p.FileName(), user.ID)
+	err = s.saveFile(randID, fileName, user.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

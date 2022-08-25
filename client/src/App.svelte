@@ -11,9 +11,9 @@
   <SvelteToast />
   <Router>
     <Route path="/" component={Home} />
-    <Route path="/auth/register" component={Register} />
-    <Route path="/auth/login" component={Login} />
-    <Route path="/dashboard" component={Dashboard} />
+    <Route path="/auth/register"><Register /></Route>
+    <Route path="/auth/login"><Login /></Route>
+    <Route path="/dashboard"><Dashboard /></Route>
   </Router>
 </main>
 
@@ -28,5 +28,10 @@
     padding: 0;
     box-sizing: border-box;
     font-family: raleway;
+    overflow: hidden;
+  }
+
+  main {
+    overflow: hidden;
   }
 </style>

@@ -144,6 +144,10 @@
         transition: 0.3s ease;
       }
 
+      & > button:hover {
+        background-color: #5300a1;
+      }
+
       .users-list {
         width: 100%;
         height: 100%;

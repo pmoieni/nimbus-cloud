@@ -7,8 +7,6 @@
   import { API } from "../constants/API";
   import { AuthState } from "../store/Auth";
 
-  export let togglePasswordModal;
-
   let email = "";
   let password = "";
 
@@ -46,12 +44,12 @@
   }
 </script>
 
-<div>
+<div class="login-page">
   <form on:submit|preventDefault={LoginUser}>
     <div>
       <h2>Login</h2>
     </div>
-    <div>
+    <div class="input-con">
       <input
         type="email"
         name="email"
@@ -67,17 +65,84 @@
         bind:value={password}
       />
     </div>
-    <div>
+    <div class="btn-con">
       <button type="submit">Login</button>
-      <button type="button" on:click={togglePasswordModal}>
-        forgot password?
-      </button>
-      <div>
-        <Link to="/auth/register">Don't have an account yet? Register</Link>
-      </div>
+      <Link to="/auth/register">Don't have an account yet? Register</Link>
     </div>
   </form>
 </div>
 
 <style lang="scss">
+  .login-page {
+    background-image: url("../assets/cool-background.svg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    form {
+      background-color: #fff;
+      border-radius: 0.3rem;
+      box-shadow: 0px 0px 30px rgba($color: #000000, $alpha: 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      max-width: 20rem;
+      max-height: 22rem;
+
+      & > div {
+        padding: 0.5rem;
+      }
+
+      .input-con {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+
+        & > input {
+          border: none;
+          outline: none;
+          background-color: #dadada;
+          border-radius: 0.3rem;
+          margin: 0.25rem 0;
+          padding: 1rem 2rem;
+        }
+
+        & > input:hover {
+          background-color: #cecece;
+        }
+
+        & > input:focus {
+          border-bottom: 3px solid #8400ff;
+        }
+      }
+
+      .btn-con {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+
+        & > button {
+          border: 0;
+          outline: 0;
+          background-color: #8400ff;
+          width: 100%;
+          padding: 0.5rem;
+          margin: 0.25rem 0;
+          color: #fff;
+          font-size: 1.2rem;
+          border-radius: 0.3rem;
+          transition: 0.3s ease;
+        }
+      }
+    }
+  }
 </style>
