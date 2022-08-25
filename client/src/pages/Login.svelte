@@ -108,20 +108,8 @@
         flex-direction: column;
 
         & > input {
-          border: none;
-          outline: none;
-          background-color: #dadada;
-          border-radius: 0.3rem;
           margin: 0.25rem 0;
           padding: 1rem 2rem;
-        }
-
-        & > input:hover {
-          background-color: #cecece;
-        }
-
-        & > input:focus {
-          border-bottom: 3px solid #8400ff;
         }
       }
 

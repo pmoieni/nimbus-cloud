@@ -1,9 +1,11 @@
 <script lang="ts">
   import { API } from "../constants/API";
-  import { failure, success } from "../toast/toast";
+  import { failure, success, warning } from "../toast/toast";
   import { onMount } from "svelte";
-  import type { FileShareReq } from "src/models/Store";
+  import type { FileShareReq } from "../models/Store";
   import DataAPI from "../API/API";
+  import { UserState } from "../store/Auth";
+  import type { User } from "../models/Auth";
 
   export let fileObjectName: string;
   export let toggleModal;
@@ -12,12 +14,18 @@
   let users: string[] = [];
   let permittedUsers: string[] = [];
 
+  let userInfo: User;
+  UserState.subscribe((value) => {
+    userInfo = value;
+  });
+
   onMount(() => {
     console.log("mounted");
     DataAPI.get(API.Routes.Users.Base)
       .then((res) => {
         if (res.data) {
           users = res.data["users"];
+          users = users.filter((el) => el != userInfo.email);
         }
 
         DataAPI.get(API.Routes.Store.Base + "/" + fileObjectName + "/users")
@@ -26,7 +34,7 @@
               if (res.data["users"]) {
                 permittedUsers = [...permittedUsers, ...res.data["users"]];
                 if (permittedUsers.length > 0) {
-                  users.filter((el) => !permittedUsers.includes(el));
+                  users = users.filter((el) => !permittedUsers.includes(el));
                 }
               }
             }
@@ -49,21 +57,25 @@
   }
 
   function Share() {
-    const req: FileShareReq = {
-      users: selectedUsers,
-    };
-    DataAPI.post(
-      API.Routes.Store.Base + "/" + fileObjectName + "/share",
-      JSON.stringify(req)
-    )
-      .then((res) => {
-        success("File successfully shared.");
-        toggleModal();
-      })
-      .catch((err) => {
-        failure("File share failed.");
-        toggleModal();
-      });
+    if (selectedUsers.length > 0) {
+      const req: FileShareReq = {
+        users: selectedUsers,
+      };
+      DataAPI.post(
+        API.Routes.Store.Base + "/" + fileObjectName + "/share",
+        JSON.stringify(req)
+      )
+        .then((res) => {
+          success("File successfully shared.");
+          toggleModal();
+        })
+        .catch((err) => {
+          failure("File share failed.");
+          toggleModal();
+        });
+    } else {
+      warning("You haven't selected any users.");
+    }
   }
 </script>
 
@@ -79,22 +91,26 @@
       {/each}
     </div>
     <div class="users-list">
-      {#each users as user}
-        {#if selectedUsers.includes(user)}
-          <div
-            style="background-color: #f3ff84;"
-            class="user"
-            on:click={() => toggleUser(user)}
-          >
-            {user}
-            <p>Selected</p>
-          </div>
-        {:else}
-          <div class="user" on:click={() => toggleUser(user)}>
-            {user}
-          </div>
-        {/if}
-      {/each}
+      {#if users.length > 0}
+        {#each users as user}
+          {#if selectedUsers.includes(user)}
+            <div
+              style="background-color: #f3ff84;"
+              class="user"
+              on:click={() => toggleUser(user)}
+            >
+              {user}
+              <p>Selected</p>
+            </div>
+          {:else}
+            <div class="user" on:click={() => toggleUser(user)}>
+              {user}
+            </div>
+          {/if}
+        {/each}
+      {:else}
+        <p>file already shared with everyone</p>
+      {/if}
     </div>
     <button class="btn" on:click={Share}>Share</button>
   </div>

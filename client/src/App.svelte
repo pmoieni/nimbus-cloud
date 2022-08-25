@@ -45,6 +45,24 @@
     background-color: #5300a1;
   }
 
+  :global(input) {
+    border: none;
+    outline: none;
+    background-color: #dadada;
+    border-top-right-radius: 0.3rem;
+    border-top-left-radius: 0.3rem;
+    border-bottom: 2px solid #888888;
+  }
+
+  :global(input:hover) {
+    background-color: #c2c2c2;
+  }
+
+  :global(input:focus) {
+    background-color: #c2c2c2;
+    border-bottom: 2px solid #8400ff;
+  }
+
   main {
     overflow: hidden;
   }

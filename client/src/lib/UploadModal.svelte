@@ -1,17 +1,17 @@
 <script lang="ts">
   import DataAPI from "../API/API";
   import { API } from "../constants/API";
-  import { failure, success } from "../toast/toast";
+  import { failure, success, warning } from "../toast/toast";
 
   export let toggleModal;
   export let refresh;
 
   let fileName = "";
-  let selectedFile;
+  let selectedFile: FileList;
   let uploadButtonDisabled: boolean = false;
 
   function Upload() {
-    if (selectedFile[0]) {
+    if (selectedFile && selectedFile[0]) {
       uploadButtonDisabled = true;
       const formData = new FormData();
       formData.append("text", fileName);
@@ -26,6 +26,8 @@
           failure("Failed to upload the files.");
           toggleModal();
         });
+    } else {
+      warning("You haven't selected any file.");
     }
   }
 </script>
@@ -83,20 +85,8 @@
       }
 
       & > input {
-        border: none;
-        outline: none;
-        background-color: #dadada;
-        border-radius: 0.3rem;
         margin: 0.25rem 0;
         padding: 1rem 2rem;
-      }
-
-      & > input:hover {
-        background-color: #cecece;
-      }
-
-      & > input:focus {
-        border-bottom: 3px solid #8400ff;
       }
     }
   }
