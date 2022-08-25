@@ -3,11 +3,10 @@
   import { API } from "../constants/API";
   import { failure, success } from "../toast/toast";
 
-  export let show: boolean;
   export let toggleModal;
   export let refresh;
 
-  let fileName;
+  let fileName = "";
   let selectedFile;
   let uploadButtonDisabled: boolean = false;
 
@@ -31,20 +30,20 @@
   }
 </script>
 
-{#if show}
-  <div on:click|self={toggleModal} class="upload-modal-con">
-    <div class="upload-modal">
-      <p>Upload file</p>
-      <input
-        type="text"
-        bind:value={fileName}
-        placeholder="File name: Optional"
-      />
-      <input type="file" bind:files={selectedFile} />
-      <button disabled={uploadButtonDisabled} on:click={Upload}>Upload</button>
-    </div>
+<div on:click|self={toggleModal} class="upload-modal-con">
+  <div class="upload-modal">
+    <p>Upload file</p>
+    <input
+      type="text"
+      bind:value={fileName}
+      placeholder="File name: Optional"
+    />
+    <input type="file" bind:files={selectedFile} />
+    <button class="btn" disabled={uploadButtonDisabled} on:click={Upload}
+      >Upload</button
+    >
   </div>
-{/if}
+</div>
 
 <style lang="scss">
   .upload-modal-con {
@@ -76,18 +75,11 @@
       & > button {
         border: 0;
         outline: 0;
-        background-color: #8400ff;
         height: 3rem;
         width: 100%;
         margin: 0.5rem;
-        color: #fff;
         font-size: 1.5rem;
         border-radius: 0.3rem;
-        transition: 0.3s ease;
-      }
-
-      & > button:hover {
-        background-color: #5300a1;
       }
 
       & > input {

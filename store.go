@@ -100,18 +100,19 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rawFileName := strings.Map(func(r rune) rune {
+		if unicode.IsPrint(r) {
+			return r
+		}
+		return -1
+	}, string(text))
 	var fileName string
 	var extension string
-	if len(strings.TrimSpace(string(text))) > 0 {
+	if len(strings.TrimSpace(string(rawFileName))) > 0 {
 		parts := strings.Split(p.FileName(), ".")
 		if len(parts) > 0 {
 			extension = strings.TrimSpace(parts[len(parts)-1])
-			fileName = strings.Map(func(r rune) rune {
-				if unicode.IsPrint(r) {
-					return r
-				}
-				return -1
-			}, string(text)) + "." + extension
+			fileName = rawFileName + "." + extension
 
 		} else {
 			fileName = p.FileName()

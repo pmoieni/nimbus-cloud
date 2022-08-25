@@ -1,8 +1,8 @@
 <script lang="ts">
-  import Icon from "../lib/Icon.svelte";
+  import Icon from "./Icon.svelte";
   import { API } from "../constants/API";
-  import ShareModal from "../lib/ShareModal.svelte";
-  import DeleteModal from "../lib/DeleteModal.svelte";
+  import ShareModal from "./ShareModal.svelte";
+  import DeleteModal from "./DeleteModal.svelte";
   import { failure } from "../toast/toast";
   import DataAPI from "../API/API";
 
@@ -43,24 +43,27 @@
 <div class="file-item">
   <div class="file-name"><p>{fileName}</p></div>
   <div class="options">
-    <button on:click={() => DownloadFile(objectName, fileName)}
+    <button class="btn" on:click={() => DownloadFile(objectName, fileName)}
       ><Icon name="download" /></button
     >
-    <button on:click={toggleDeleteModal}><Icon name="trash" /></button>
-    <button on:click={toggleShareModal}><Icon name="share-2" /></button>
+    <button class="btn" on:click={toggleDeleteModal}
+      ><Icon name="trash" /></button
+    >
+    <button class="btn" on:click={toggleShareModal}
+      ><Icon name="share-2" /></button
+    >
   </div>
 </div>
-<ShareModal
-  toggleModal={toggleShareModal}
-  fileObjectName={objectName}
-  show={showShareModal}
-/>
-<DeleteModal
-  {refresh}
-  toggleModal={toggleDeleteModal}
-  fileObjectName={objectName}
-  show={showDeleteModal}
-/>
+{#if showShareModal}
+  <ShareModal toggleModal={toggleShareModal} fileObjectName={objectName} />
+{/if}
+{#if showDeleteModal}
+  <DeleteModal
+    {refresh}
+    toggleModal={toggleDeleteModal}
+    fileObjectName={objectName}
+  />
+{/if}
 
 <style lang="scss">
   .file-item {
@@ -82,21 +85,15 @@
 
     .options {
       height: 100%;
+
       & > button {
         border: 0;
         outline: 0;
-        background-color: #8400ff;
         height: 3.5rem;
         width: 3.5rem;
         margin: 0.25rem;
-        color: #fff;
         font-size: 1.5rem;
         border-radius: 0.3rem;
-        transition: 0.3s ease;
-      }
-
-      & > button:hover {
-        background-color: #5300a1;
       }
     }
   }

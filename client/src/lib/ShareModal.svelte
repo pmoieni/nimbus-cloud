@@ -5,7 +5,6 @@
   import type { FileShareReq } from "src/models/Store";
   import DataAPI from "../API/API";
 
-  export let show: boolean;
   export let fileObjectName: string;
   export let toggleModal;
 
@@ -14,26 +13,27 @@
   let permittedUsers: string[] = [];
 
   onMount(() => {
+    console.log("mounted");
     DataAPI.get(API.Routes.Users.Base)
       .then((res) => {
         if (res.data) {
           users = res.data["users"];
         }
-      })
-      .catch((err) => {
-        failure("Failed to fetch users list.");
-      });
 
-    DataAPI.get(API.Routes.Store.Base + "/" + fileObjectName + "/users")
-      .then((res) => {
-        if (res.data) {
-          if (res.data["users"]) {
-            permittedUsers = [...permittedUsers, ...res.data["users"]];
-            if (permittedUsers.length > 0) {
-              users.filter((el) => !permittedUsers.includes(el));
+        DataAPI.get(API.Routes.Store.Base + "/" + fileObjectName + "/users")
+          .then((res) => {
+            if (res.data) {
+              if (res.data["users"]) {
+                permittedUsers = [...permittedUsers, ...res.data["users"]];
+                if (permittedUsers.length > 0) {
+                  users.filter((el) => !permittedUsers.includes(el));
+                }
+              }
             }
-          }
-        }
+          })
+          .catch((err) => {
+            failure("Failed to fetch users list.");
+          });
       })
       .catch((err) => {
         failure("Failed to fetch users list.");
@@ -67,40 +67,38 @@
   }
 </script>
 
-{#if show}
-  <div on:click|self={toggleModal} class="share-modal-con">
-    <div class="share-modal">
-      <p>Share</p>
-      <div class="users-list">
-        <p>recently shared:</p>
-        {#each permittedUsers as user}
-          <div style="background-color: #f3ff84;" class="user">
+<div on:click|self={toggleModal} class="share-modal-con">
+  <div class="share-modal">
+    <p>Share</p>
+    <div class="users-list">
+      <p>recently shared:</p>
+      {#each permittedUsers as user}
+        <div style="background-color: #f3ff84;" class="user">
+          {user}
+        </div>
+      {/each}
+    </div>
+    <div class="users-list">
+      {#each users as user}
+        {#if selectedUsers.includes(user)}
+          <div
+            style="background-color: #f3ff84;"
+            class="user"
+            on:click={() => toggleUser(user)}
+          >
+            {user}
+            <p>Selected</p>
+          </div>
+        {:else}
+          <div class="user" on:click={() => toggleUser(user)}>
             {user}
           </div>
-        {/each}
-      </div>
-      <div class="users-list">
-        {#each users as user}
-          {#if selectedUsers.includes(user)}
-            <div
-              style="background-color: #f3ff84;"
-              class="user"
-              on:click={() => toggleUser(user)}
-            >
-              {user}
-              <p>Selected</p>
-            </div>
-          {:else}
-            <div class="user" on:click={() => toggleUser(user)}>
-              {user}
-            </div>
-          {/if}
-        {/each}
-      </div>
-      <button on:click={Share}>Share</button>
+        {/if}
+      {/each}
     </div>
+    <button class="btn" on:click={Share}>Share</button>
   </div>
-{/if}
+</div>
 
 <style lang="scss">
   .share-modal-con {
@@ -132,18 +130,11 @@
       & > button {
         border: 0;
         outline: 0;
-        background-color: #8400ff;
         height: 3rem;
         width: 100%;
         margin: 0.5rem;
-        color: #fff;
         font-size: 1.5rem;
         border-radius: 0.3rem;
-        transition: 0.3s ease;
-      }
-
-      & > button:hover {
-        background-color: #5300a1;
       }
 
       .users-list {

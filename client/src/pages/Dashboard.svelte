@@ -3,13 +3,14 @@
   import { API } from "../constants/API";
   import { onMount } from "svelte";
   import { failure } from "../toast/toast";
-  import DashboardNav from "./DashboardNav.svelte";
-  import FileItem from "./FileItem.svelte";
+  import DashboardNav from "../lib/DashboardNav.svelte";
+  import FileItem from "../lib/FileItem.svelte";
   import { permittedFiles, userFiles } from "../store/Store";
   import Icon from "../lib/Icon.svelte";
   import UploadModal from "../lib/UploadModal.svelte";
-  import SharedFileItem from "./SharedFileItem.svelte";
+  import SharedFileItem from "../lib/SharedFileItem.svelte";
   import DataAPI from "../API/API";
+  import { UserState } from "../store/Auth";
 
   let uf: File[] = null;
   let pf: File[] = null;
@@ -22,15 +23,25 @@
   });
 
   function refresh() {
-    DataAPI.get(API.Routes.Store.Base)
+    DataAPI.get(API.Routes.Users.Me)
       .then((res) => {
         if (res.data) {
-          userFiles.set(res.data["user_files"]);
-          permittedFiles.set(res.data["permitted_files"]);
+          UserState.set(res.data);
         }
+
+        DataAPI.get(API.Routes.Store.Base)
+          .then((res) => {
+            if (res.data) {
+              userFiles.set(res.data["user_files"]);
+              permittedFiles.set(res.data["permitted_files"]);
+            }
+          })
+          .catch((err) => {
+            failure("Unable to fetch user files.");
+          });
       })
       .catch((err) => {
-        failure("Unable to fetch user files.");
+        failure("Failed to fetch user info.");
       });
   }
 
@@ -73,15 +84,13 @@
       <p>No one has shared any file with you.</p>
     {/if}
   </div>
-  <button on:click={toggleUploadModal} class="upload-btn"
+  <button on:click={toggleUploadModal} class="upload-btn btn"
     ><p>Upload</p>
     <Icon name="upload" /></button
   >
-  <UploadModal
-    {refresh}
-    show={showUploadModal}
-    toggleModal={toggleUploadModal}
-  />
+  {#if showUploadModal}
+    <UploadModal {refresh} toggleModal={toggleUploadModal} />
+  {/if}
 </div>
 
 <style lang="scss">
@@ -99,23 +108,17 @@
       border: 0;
       outline: 0;
       border-radius: 5rem;
-      background-color: #8400ff;
       height: 4rem;
       display: flex;
       align-items: center;
       justify-content: space-around;
       padding: 1rem;
-      color: #fff;
       font-size: 1.5rem;
-      transition: 0.3s ease;
+      box-shadow: 0px 0px 30px rgba($color: #000000, $alpha: 0.3);
 
       p {
         margin: 0 0.5rem;
       }
-    }
-
-    .upload-btn:hover {
-      background-color: #5300a1;
     }
 
     .file-list {

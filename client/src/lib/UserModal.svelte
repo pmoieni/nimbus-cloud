@@ -1,34 +1,16 @@
 <script lang="ts">
   import { API } from "../constants/API";
   import { failure, success } from "../toast/toast";
-  import { onMount } from "svelte";
   import type { User, UserUpdateReq } from "../models/Auth";
   import { UserState } from "../store/Auth";
   import Icon from "./Icon.svelte";
   import DataAPI from "../API/API";
 
-  export let show: boolean;
   export let toggleModal;
 
   let userInfo: User;
   UserState.subscribe((value) => {
     userInfo = value;
-  });
-
-  function refresh() {
-    DataAPI.get(API.Routes.Users.Me)
-      .then((res) => {
-        if (res.data) {
-          UserState.set(res.data);
-        }
-      })
-      .catch((err) => {
-        failure("Failed to fetch user info.");
-      });
-  }
-
-  onMount(() => {
-    refresh();
   });
 
   let editing: boolean = false;
@@ -46,7 +28,6 @@
     DataAPI.patch(API.Routes.Users.Me, JSON.stringify(updateInfo))
       .then((res) => {
         success("Username updated.");
-        refresh();
       })
       .catch((err) => {
         failure("Failed to update the username.");
@@ -54,47 +35,47 @@
   }
 </script>
 
-{#if show}
-  <div on:click|self={toggleModal} class="user-modal-con">
-    <div class="user-modal">
-      <div class="username">
-        <h5>Username:</h5>
-        <p>{userInfo.username}</p>
-        <button class="edit-btn" on:click={toggleEditing}
-          ><Icon name="edit" /></button
+<div on:click|self={toggleModal} class="user-modal-con">
+  <div class="user-modal">
+    <div class="username">
+      <h5>Username:</h5>
+      <p>{userInfo.username}</p>
+      <button class="edit-btn" on:click={toggleEditing}
+        ><Icon name="edit" /></button
+      >
+    </div>
+    {#if editing}
+      <div class="edit-username">
+        <input
+          type="text"
+          bind:value={editUsername}
+          placeholder="Edit Username"
+        />
+        <button class="save-btn btn" on:click={EditUsername}
+          ><Icon name="check" /></button
         >
       </div>
-      {#if editing}
-        <div class="edit-username">
-          <input
-            type="text"
-            bind:value={editUsername}
-            placeholder="Edit Username"
-          />
-          <button class="save-btn" on:click={EditUsername}
-            ><Icon name="check" /></button
-          >
-        </div>
-      {/if}
-      <div class="email">
-        <h5>Email:</h5>
-        <p>{userInfo.email}</p>
-      </div>
+    {/if}
+    <div class="email">
+      <h5>Email:</h5>
+      <p>{userInfo.email}</p>
     </div>
   </div>
-{/if}
+</div>
 
 <style lang="scss">
   .user-modal-con {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     background-color: rgba($color: #000000, $alpha: 0.3);
 
     .user-modal {
       position: absolute;
-      top: 3rem;
-      right: 0.5rem;
+      top: 4rem;
+      right: 1rem;
       width: 20rem;
       padding: 0.5rem;
       border-radius: 0.3rem;
@@ -152,16 +133,9 @@
           outline: none;
           width: 100%;
           padding: 0.5rem;
-          background-color: #8400ff;
-          color: #fff;
           font-size: 1.2rem;
           margin: 0 0.25rem 0 0;
           border-radius: 0.3rem;
-          transition: 0.3s ease;
-        }
-
-        .save-btn:hover {
-          background-color: #5300a1;
         }
       }
     }

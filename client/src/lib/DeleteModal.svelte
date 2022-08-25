@@ -3,7 +3,6 @@
   import { API } from "../constants/API";
   import { failure, success } from "../toast/toast";
 
-  export let show: boolean;
   export let fileObjectName: string;
   export let toggleModal;
   export let refresh;
@@ -22,18 +21,16 @@
   }
 </script>
 
-{#if show}
-  <div on:click|self={toggleModal} class="delete-modal-con">
-    <div class="delete-modal">
-      <p>Delete</p>
-      <p>Are you sure?</p>
-      <div class="btn-con">
-        <button on:click={Delete}>Yes</button>
-        <button on:click={toggleModal}>No</button>
-      </div>
+<div on:click|self={toggleModal} class="delete-modal-con">
+  <div class="delete-modal">
+    <p>Delete</p>
+    <p>Are you sure?</p>
+    <div class="btn-con">
+      <button class="btn" on:click={Delete}>Yes</button>
+      <button class="btn" on:click={toggleModal}>No</button>
     </div>
   </div>
-{/if}
+</div>
 
 <style lang="scss">
   .delete-modal-con {
@@ -71,14 +68,11 @@
         & > button {
           border: 0;
           outline: 0;
-          background-color: #8400ff;
           height: 3rem;
           width: 100%;
           margin: 0.5rem;
-          color: #fff;
           font-size: 1.5rem;
           border-radius: 0.3rem;
-          transition: 0.3s ease;
         }
       }
     }

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import Icon from "../lib/Icon.svelte";
+  import Icon from "./Icon.svelte";
   import { Link, navigate } from "svelte-navigator";
   import AuthAPI from "../API/Auth";
   import { API } from "../constants/API";
   import { failure, success } from "../toast/toast";
-  import UserModal from "../lib/UserModal.svelte";
+  import UserModal from "./UserModal.svelte";
 
   function Logout() {
     AuthAPI.get(API.Routes.Auth.Logout)
@@ -27,9 +27,11 @@
 <div class="dashboard-nav">
   <div class="logo">Nimbus Cloud</div>
   <div class="options">
-    <button on:click={Logout}>Logout</button>
-    <button on:click={toggleUserModal}><Icon name="user" /></button>
-    <UserModal show={showUserModal} toggleModal={toggleUserModal} />
+    <button class="btn" on:click={Logout}>Logout</button>
+    <button class="btn" on:click={toggleUserModal}><Icon name="user" /></button>
+    {#if showUserModal}
+      <UserModal toggleModal={toggleUserModal} />
+    {/if}
   </div>
 </div>
 
@@ -61,19 +63,12 @@
       & > button {
         border: 0;
         outline: 0;
-        background-color: #8400ff;
         height: 100%;
         width: 100%;
         padding: 0.5rem;
         margin: 0 0.25rem;
-        color: #fff;
         font-size: 1.2rem;
         border-radius: 0.3rem;
-        transition: 0.3s ease;
-      }
-
-      & > button:hover {
-        background-color: #5300a1;
       }
     }
   }

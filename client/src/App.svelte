@@ -13,7 +13,7 @@
     <Route path="/" component={Home} />
     <Route path="/auth/register"><Register /></Route>
     <Route path="/auth/login"><Login /></Route>
-    <Route path="/dashboard"><Dashboard /></Route>
+    <Route primary={false} path="/dashboard"><Dashboard /></Route>
   </Router>
 </main>
 
@@ -33,6 +33,16 @@
 
   :global(button:hover) {
     cursor: pointer;
+  }
+
+  :global(.btn) {
+    color: #fff;
+    background-color: #8400ff;
+    transition: 0.3s ease;
+  }
+
+  :global(.btn:hover) {
+    background-color: #5300a1;
   }
 
   main {

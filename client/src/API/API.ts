@@ -44,11 +44,9 @@ DataAPI.interceptors.response.use(
           const res = await AuthAPI.get(API.Routes.Auth.RefreshToken);
           AuthState.update((value) => {
             value.accessToken = res.data["access_token"];
-            console.log("at is: " + res.data["access_token"]);
             return value;
           });
         } catch (err) {
-          console.log(err);
           navigate("/auth/login");
         }
 
