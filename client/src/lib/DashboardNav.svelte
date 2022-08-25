@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { Link, navigate } from "svelte-navigator";
+  import { navigate } from "svelte-navigator";
   import AuthAPI from "../API/Auth";
   import { API } from "../constants/API";
   import { failure, success } from "../toast/toast";

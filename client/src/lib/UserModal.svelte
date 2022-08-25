@@ -28,6 +28,16 @@
     DataAPI.patch(API.Routes.Users.Me, JSON.stringify(updateInfo))
       .then((res) => {
         success("Username updated.");
+
+        DataAPI.get(API.Routes.Users.Me)
+          .then((res) => {
+            if (res.data) {
+              UserState.set(res.data);
+            }
+          })
+          .catch((err) => {
+            failure("Failed to fetch user info.");
+          });
       })
       .catch((err) => {
         failure("Failed to update the username.");

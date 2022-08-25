@@ -1,6 +1,7 @@
 package nbc
 
 // import (
+// 	"context"
 // 	"encoding/json"
 // 	"net/http"
 
@@ -28,7 +29,7 @@ package nbc
 // 		return
 // 	}
 
-// 	return c.JSON(http.StatusOK, "success")
+// 	w.WriteHeader(http.StatusOK)
 // }
 
 // func (s *AuthService) SendPasswordResetToken(w http.ResponseWriter, r *http.Request) {
@@ -38,18 +39,7 @@ package nbc
 // // ----------------------- SERVICES ------------------------
 
 // func (s *AuthService) resetPassword(r *resetPasswordReq) error {
-// 	getTokenRedisDTO := store.RedisDTO{
-// 		Key: r.Token,
-// 	}
-// 	v, err := getTokenRedisDTO.Get(store.PasswordResetTokenDB)
-// 	if err != nil {
-// 		switch err {
-// 		case redis.Nil:
-// 			return &req.ErrorResponse{Status: http.StatusForbidden, Message: http.StatusText(http.StatusForbidden)}
-// 		default:
-// 			return err
-// 		}
-// 	}
+// 	v := s.RedisPasswordTokenDB.Get(context.Background(), r.Token)
 
 // 	// remove token since it's already used
 // 	s.RedisPasswordTokenDB.Del(r.Token)
