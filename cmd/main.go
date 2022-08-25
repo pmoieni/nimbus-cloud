@@ -81,7 +81,9 @@ func main() {
 			r.Post("/upload", storeService.Upload)
 			r.Route("/{name}", func(r chi.Router) {
 				r.Use(storeService.CheckFilePermission)
-				r.Get("/", storeService.Download)
+				r.Group(func(r chi.Router) {
+					r.Get("/", storeService.Download)
+				})
 				r.Group(func(r chi.Router) {
 					r.Use(storeService.CheckFileOwner)
 					r.Delete("/", storeService.Delete)

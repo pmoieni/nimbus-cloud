@@ -6,9 +6,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
+	"unicode"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -100,11 +102,18 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var fileName string
+	var extension string
 	if len(strings.TrimSpace(string(text))) > 0 {
 		parts := strings.Split(p.FileName(), ".")
 		if len(parts) > 0 {
-			extension := parts[len(parts)-1]
-			fileName = string(text) + extension
+			extension = strings.TrimSpace(parts[len(parts)-1])
+			fileName = strings.Map(func(r rune) rune {
+				if unicode.IsPrint(r) {
+					return r
+				}
+				return -1
+			}, string(text)) + "." + extension
+
 		} else {
 			fileName = p.FileName()
 		}
@@ -121,6 +130,7 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 
 	err = s.saveFile(randID, fileName, user.ID)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -243,7 +253,8 @@ func (s *StoreService) Download(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileInfo.Name+"\"")
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Disposition", "attachment; filename="+"\""+fileInfo.Name+"\"")
 	w.Header().Set("Content-Type", "application/octet-stream")
 	http.ServeFile(w, r, "./bucket/"+on)
 }
