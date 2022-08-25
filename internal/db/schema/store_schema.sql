@@ -3,6 +3,7 @@ CREATE TABLE files (
     name text NOT NULL,
     object_name text NOT NULL,
     owner BIGINT NOT NULL,
+    FOREIGN KEY (owner) REFERENCES users(id),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL DEFAULT NULL,

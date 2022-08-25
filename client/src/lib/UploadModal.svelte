@@ -1,5 +1,5 @@
 <script lang="ts">
-  import StoreAPI from "../API/Store";
+  import DataAPI from "../API/API";
   import { API } from "../constants/API";
   import { failure, success } from "../toast/toast";
 
@@ -9,13 +9,15 @@
 
   let fileName;
   let selectedFile;
+  let uploadButtonDisabled: boolean = false;
 
   function Upload() {
     if (selectedFile[0]) {
+      uploadButtonDisabled = true;
       const formData = new FormData();
       formData.append("text", fileName);
       formData.append("file", selectedFile[0]);
-      StoreAPI.post(API.Routes.Store.Upload, formData)
+      DataAPI.post(API.Routes.Store.Upload, formData)
         .then((res) => {
           success("Files uploaded.");
           toggleModal();
@@ -39,7 +41,7 @@
         placeholder="File name: Optional"
       />
       <input type="file" bind:files={selectedFile} />
-      <button on:click={Upload}>Upload</button>
+      <button disabled={uploadButtonDisabled} on:click={Upload}>Upload</button>
     </div>
   </div>
 {/if}

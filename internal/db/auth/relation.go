@@ -6,6 +6,7 @@ import (
 
 var listPermittedUsers = `SELECT 
 	u.id,
+	username,
     email
 	FROM user_file_relation uf
     INNER JOIN users u ON u.id = uf.user_id
@@ -28,6 +29,7 @@ func (q *Queries) ListPermittedUsers(ctx context.Context, fID int64) (Users, err
 		var i User
 		if err := rows.Scan(
 			&i.ID,
+			&i.Username,
 			&i.Email,
 		); err != nil {
 			return nil, err

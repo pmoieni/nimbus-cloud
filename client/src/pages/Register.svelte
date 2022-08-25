@@ -6,11 +6,13 @@
   import AuthAPI from "../API/Auth";
   import { API } from "../constants/API";
 
+  let username = "";
   let email = "";
   let password = "";
 
   function LoginUser() {
     const user: RegisterReq = {
+      username,
       email,
       password,
     };
@@ -22,6 +24,10 @@
       .catch((err: AxiosError) => {
         if (err.response!.status === 400) {
           failure("Check you inputs.");
+          return;
+        }
+        if (err.response!.status === 403) {
+          failure("User already exists.");
           return;
         }
         if (err.response!.status === 500) {
@@ -40,6 +46,13 @@
       <h2>Register</h2>
     </div>
     <div class="input-con">
+      <input
+        type="text"
+        name="username"
+        id="username"
+        placeholder="Username"
+        bind:value={username}
+      />
       <input
         type="email"
         name="email"

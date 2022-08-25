@@ -1,5 +1,5 @@
 <script lang="ts">
-  import StoreAPI from "../API/Store";
+  import DataAPI from "../API/API";
   import { API } from "../constants/API";
   import { failure, success } from "../toast/toast";
 
@@ -9,7 +9,7 @@
   export let refresh;
 
   function Delete() {
-    StoreAPI.delete(API.Routes.Store.Base + "/" + fileObjectName)
+    DataAPI.delete(API.Routes.Store.Base + "/" + fileObjectName)
       .then((res) => {
         success("File deleted.");
         toggleModal();

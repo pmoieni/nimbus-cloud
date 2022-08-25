@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { File } from "../models/Store";
-  import StoreAPI from "../API/Store";
   import { API } from "../constants/API";
   import { onMount } from "svelte";
   import { failure } from "../toast/toast";
@@ -10,20 +9,20 @@
   import Icon from "../lib/Icon.svelte";
   import UploadModal from "../lib/UploadModal.svelte";
   import SharedFileItem from "./SharedFileItem.svelte";
+  import DataAPI from "../API/API";
 
-  let uf: File[] = [];
-  let pf: File[] = [];
+  let uf: File[] = null;
+  let pf: File[] = null;
 
   userFiles.subscribe((value) => {
     uf = value;
-    console.log(uf);
   });
   permittedFiles.subscribe((value) => {
     pf = value;
   });
 
   function refresh() {
-    StoreAPI.get(API.Routes.Store.Base)
+    DataAPI.get(API.Routes.Store.Base)
       .then((res) => {
         if (res.data) {
           userFiles.set(res.data["user_files"]);
@@ -49,14 +48,30 @@
 <div class="dashboard-page">
   <DashboardNav />
   <div class="file-list">
-    {#each uf as file}
-      <FileItem {refresh} objectName={file.object_name} fileName={file.name} />
-    {/each}
-    <hr />
-    <p>Files shared with you:</p>
-    {#each pf as file}
-      <SharedFileItem objectName={file.object_name} fileName={file.name} />
-    {/each}
+    {#if uf.length > 0}
+      {#each uf as file}
+        <FileItem
+          {refresh}
+          objectName={file.object_name}
+          fileName={file.name}
+        />
+      {:else}
+        <p>Loading...</p>
+      {/each}
+    {:else}
+      <p>Nothing to see here.</p>
+    {/if}
+    {#if pf.length > 0}
+      <hr />
+      <p>Files shared with you:</p>
+      {#each pf as file}
+        <SharedFileItem objectName={file.object_name} fileName={file.name} />
+      {:else}
+        <p>Loading...</p>
+      {/each}
+    {:else}
+      <p>No one has shared any file with you.</p>
+    {/if}
   </div>
   <button on:click={toggleUploadModal} class="upload-btn"
     ><p>Upload</p>

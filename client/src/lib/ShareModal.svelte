@@ -1,11 +1,9 @@
 <script lang="ts">
-  import StoreAPI from "../API/Store";
-
-  import UsersAPI from "../API/Users";
   import { API } from "../constants/API";
   import { failure, success } from "../toast/toast";
   import { onMount } from "svelte";
   import type { FileShareReq } from "src/models/Store";
+  import DataAPI from "../API/API";
 
   export let show: boolean;
   export let fileObjectName: string;
@@ -16,7 +14,7 @@
   let permittedUsers: string[] = [];
 
   onMount(() => {
-    UsersAPI.get(API.Routes.Users.Base)
+    DataAPI.get(API.Routes.Users.Base)
       .then((res) => {
         if (res.data) {
           users = res.data["users"];
@@ -26,7 +24,7 @@
         failure("Failed to fetch users list.");
       });
 
-    StoreAPI.get(API.Routes.Store.Base + "/" + fileObjectName + "/users")
+    DataAPI.get(API.Routes.Store.Base + "/" + fileObjectName + "/users")
       .then((res) => {
         if (res.data) {
           if (res.data["users"]) {
@@ -54,7 +52,7 @@
     const req: FileShareReq = {
       users: selectedUsers,
     };
-    StoreAPI.post(
+    DataAPI.post(
       API.Routes.Store.Base + "/" + fileObjectName + "/share",
       JSON.stringify(req)
     )

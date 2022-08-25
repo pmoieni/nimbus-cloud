@@ -7,11 +7,11 @@ import (
 	"errors"
 	"net/http"
 	"net/mail"
-	"strings"
 	"time"
 	"unicode"
 
 	"github.com/go-redis/redis/v9"
+	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -41,6 +41,11 @@ type loginRes struct {
 
 type refreshTokenRes struct {
 	AccessToken string `json:"access_token"`
+}
+
+type userInfoRes struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
 }
 
 func (s *AuthService) Login(w http.ResponseWriter, r *http.Request) {
@@ -186,9 +191,13 @@ func (s *AuthService) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res := userInfoRes{}
+	res.Username = user.Username
+	res.Email = user.Email
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(user)
+	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -247,6 +256,10 @@ const (
 )
 
 func (s *AuthService) register(u *auth.User) error {
+	if isEmptyString(u.Username) {
+		return &errInvalidRegisterInfo
+	}
+
 	err := validateEmail(u.Email)
 	if err != nil {
 		return err
@@ -258,6 +271,7 @@ func (s *AuthService) register(u *auth.User) error {
 	}
 
 	user := auth.CreateUserParams{}
+	user.Username = u.Username
 	user.Email = u.Email
 	// u.EmailVerified = false // default value when user registers for the first time
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
@@ -269,7 +283,11 @@ func (s *AuthService) register(u *auth.User) error {
 	ctx := context.Background()
 	q := auth.New(s.DBCon)
 	_, err = q.CreateUser(ctx, &user)
+	var mysqlErr *mysql.MySQLError
 	if err != nil {
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return &errUserAlreadyExists
+		}
 		return err
 	}
 
@@ -577,7 +595,7 @@ func genRefreshToken(c *refreshTokenClaims) (string, error) {
 
 func validateEmail(e string) error {
 	if _, err := mail.ParseAddress(e); err != nil {
-		return errors.New("invalid email")
+		return &errInvalidEmail
 	}
 	return nil
 }
@@ -597,7 +615,7 @@ func validatePassword(p string) error {
 	}
 
 	if !(hasMinLen && hasNumber) {
-		return errors.New("bad password")
+		return &errBadPassword
 	}
 
 	return nil
@@ -607,6 +625,9 @@ func (s *AuthService) getUserInfo(email string) (auth.User, error) {
 	q := auth.New(s.DBCon)
 	user, err := q.GetUserByEmail(context.Background(), email)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+
+		}
 		return auth.User{}, err
 	}
 
@@ -622,20 +643,10 @@ func (s *AuthService) updateUserInfo(email string, u *auth.User) error {
 
 	updateUser := auth.UpdateUserParams{}
 	updateUser.ID = user.ID
-	if isEmptyString(u.Email) {
-		updateUser.Email = user.Email
-	} else {
-		updateUser.Email = u.Email
+	if isEmptyString(u.Username) {
+		return &errInvalidUpdateInfo
 	}
-	if isEmptyString(u.Password) {
-		updateUser.Password = user.Password
-	} else {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
-		if err != nil {
-			return err
-		}
-		updateUser.Password = string(hashedPassword)
-	}
+	updateUser.Username = u.Username
 
 	_, err = q.UpdateUser(context.Background(), &updateUser)
 	if err != nil {
@@ -643,8 +654,4 @@ func (s *AuthService) updateUserInfo(email string, u *auth.User) error {
 	}
 
 	return nil
-}
-
-func isEmptyString(s string) bool {
-	return len(strings.TrimSpace(s)) == 0
 }

@@ -4,7 +4,11 @@
 
 <div class="home-page">
   <h1>Welcome to Nimbus Cloud!</h1>
-  <Link to="/dashboard">Open Dashboard</Link>
+  <div class="link-con">
+    <Link to="/auth/register">Register</Link>
+    <Link to="/auth/login">Login</Link>
+    <Link to="/dashboard">Open Dashboard</Link>
+  </div>
 </div>
 
 <style lang="scss">
@@ -16,15 +20,22 @@
     justify-content: center;
     flex-direction: column;
 
-    & > :global(a) {
-      border: 0;
-      outline: 0;
-      background-color: #8400ff;
-      padding: 1rem;
-      color: #fff;
-      font-size: 1.2rem;
-      border-radius: 0.3rem;
-      transition: 0.3s ease;
+    .link-con {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+
+      & > :global(a) {
+        border: 0;
+        outline: 0;
+        background-color: #8400ff;
+        padding: 1rem;
+        color: #fff;
+        font-size: 1.2rem;
+        margin: 0.25rem;
+        border-radius: 0.3rem;
+        transition: 0.3s ease;
+      }
     }
   }
 </style>

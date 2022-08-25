@@ -24,8 +24,9 @@ func (s *Server) ServeHTTP() {
 	c := cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowCredentials: true,
-		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPatch},
 		AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		Debug:            true, // shouldn't be enabled in production
 	}
 	handler := cors.New(c).Handler(s.Router)
 

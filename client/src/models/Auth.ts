@@ -4,16 +4,21 @@ export interface LoginReq {
 }
 
 export interface RegisterReq {
+  username: string;
   email: string;
   password: string;
 }
 
+export interface UserUpdateReq {
+  username: string | null;
+}
+
 export interface Auth {
-  email: string | null;
   idToken: string | null;
   accessToken: string | null;
 }
 
 export interface User {
-  email: string;
+  username: string | null;
+  email: string | null;
 }

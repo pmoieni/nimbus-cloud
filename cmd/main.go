@@ -102,6 +102,7 @@ func main() {
 			r.Use(authService.CheckAuth)
 			r.Get("/", authService.GetUsersEmailList)
 			r.Get("/me", authService.GetUserInfo)
+			r.Patch("/me", authService.UpdateUserInfo)
 		})
 	})
 

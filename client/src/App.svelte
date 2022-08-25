@@ -31,6 +31,10 @@
     overflow: hidden;
   }
 
+  :global(button:hover) {
+    cursor: pointer;
+  }
+
   main {
     overflow: hidden;
   }

@@ -17,28 +17,18 @@ ORDER BY id;
 
 -- name: CreateUser :execresult
 INSERT INTO users (
+        username,
         email,
         password,
         created_at,
         updated_at,
         deleted_at
     )
-VALUES (?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?);
 
 -- name: UpdateUser :execresult
 UPDATE users
-    SET email = ?,
-    password = ?
-    WHERE id = ?;
-
--- name: UpdateUserEmail :execresult
-UPDATE users
-    SET email = ?
-    WHERE id = ?;
-
--- name: UpdateUserPassword :execresult
-UPDATE users
-    SET email = ?
+    SET username = ?
     WHERE id = ?;
 
 -- name: DeleteUser :exec

@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -130,7 +129,6 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 
 	err = s.saveFile(randID, fileName, user.ID)
 	if err != nil {
-		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

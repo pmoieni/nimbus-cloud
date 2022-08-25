@@ -1,11 +1,11 @@
-import axios, { Axios, type AxiosRequestConfig } from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 import { API } from "../constants/API";
 import { AuthState } from "../store/Auth";
+import { failure } from "../toast/toast";
 import { navigate } from "svelte-navigator";
 import AuthAPI from "./Auth";
-import { failure } from "../toast/toast";
 
-const UsersAPI = axios.create({
+const DataAPI = axios.create({
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -18,7 +18,7 @@ declare module "axios" {
   }
 }
 
-UsersAPI.interceptors.request.use((config: AxiosRequestConfig) => {
+DataAPI.interceptors.request.use((config: AxiosRequestConfig) => {
   let accessToken;
   AuthState.subscribe((value) => (accessToken = value.accessToken));
 
@@ -31,7 +31,7 @@ UsersAPI.interceptors.request.use((config: AxiosRequestConfig) => {
   return config;
 });
 
-UsersAPI.interceptors.response.use(
+DataAPI.interceptors.response.use(
   (response) => {
     return response;
   },
@@ -44,13 +44,15 @@ UsersAPI.interceptors.response.use(
           const res = await AuthAPI.get(API.Routes.Auth.RefreshToken);
           AuthState.update((value) => {
             value.accessToken = res.data["access_token"];
+            console.log("at is: " + res.data["access_token"]);
             return value;
           });
         } catch (err) {
+          console.log(err);
           navigate("/auth/login");
         }
 
-        return UsersAPI(originalConfig);
+        return DataAPI(originalConfig);
       }
       if (err.response!.status === 500) {
         failure("An unknown error occurred.");
@@ -61,4 +63,4 @@ UsersAPI.interceptors.response.use(
   }
 );
 
-export default UsersAPI;
+export default DataAPI;

@@ -4,6 +4,7 @@
   import AuthAPI from "../API/Auth";
   import { API } from "../constants/API";
   import { failure, success } from "../toast/toast";
+  import UserModal from "../lib/UserModal.svelte";
 
   function Logout() {
     AuthAPI.get(API.Routes.Auth.Logout)
@@ -15,13 +16,20 @@
         failure("Failed to logout user.");
       });
   }
+
+  let showUserModal: boolean;
+
+  function toggleUserModal() {
+    showUserModal = !showUserModal;
+  }
 </script>
 
 <div class="dashboard-nav">
   <div class="logo">Nimbus Cloud</div>
   <div class="options">
-    <Link to="/dashboard/settings"><Icon name="settings" /></Link>
     <button on:click={Logout}>Logout</button>
+    <button on:click={toggleUserModal}><Icon name="user" /></button>
+    <UserModal show={showUserModal} toggleModal={toggleUserModal} />
   </div>
 </div>
 
@@ -46,12 +54,18 @@
     }
 
     .options {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+
       & > button {
         border: 0;
         outline: 0;
         background-color: #8400ff;
         height: 100%;
+        width: 100%;
         padding: 0.5rem;
+        margin: 0 0.25rem;
         color: #fff;
         font-size: 1.2rem;
         border-radius: 0.3rem;
@@ -60,14 +74,6 @@
 
       & > button:hover {
         background-color: #5300a1;
-      }
-
-      & > :global(a) {
-        text-decoration: none;
-        font-size: 1.5rem;
-        height: 100%;
-        padding: 0.5rem;
-        color: #000000;
       }
     }
   }

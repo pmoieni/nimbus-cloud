@@ -1,13 +1,13 @@
 <script lang="ts">
   import Icon from "../lib/Icon.svelte";
-  import StoreAPI from "../API/Store";
   import { API } from "../constants/API";
+  import DataAPI from "../API/API";
 
   export let fileName;
   export let objectName;
 
   function DownloadFile(objectName: string, fileName: string) {
-    StoreAPI.get(API.Routes.Store.Base + "/" + objectName, {
+    DataAPI.get(API.Routes.Store.Base + "/" + objectName, {
       responseType: "blob",
     }).then((res) => {
       if (res.data) {
