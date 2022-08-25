@@ -1,0 +1,41 @@
+version: "2"
+sql:
+  - schema: "internal/db/schema/auth_schema.sql"
+    queries: "internal/db/schema/auth_query.sql"
+    engine: "mysql"
+    gen:
+      go:
+        package: "auth"
+        out: "internal/db/auth"
+        emit_db_tags: true
+        emit_prepared_queries: true
+        emit_empty_slices: true
+        emit_params_struct_pointers: true
+        emit_json_tags: true
+        json_tags_case_style: "snake"
+  - schema: "internal/db/schema/store_schema.sql"
+    queries: "internal/db/schema/store_query.sql"
+    engine: "mysql"
+    gen:
+      go:
+        package: "store"
+        out: "internal/db/store"
+        emit_db_tags: true
+        emit_prepared_queries: true
+        emit_empty_slices: true
+        emit_params_struct_pointers: true
+        emit_json_tags: true
+        json_tags_case_style: "snake"
+  - schema: "internal/db/schema/user_store_schema.sql"
+    queries: "internal/db/schema/user_store_query.sql"
+    engine: "mysql"
+    gen:
+      go:
+        package: "relation"
+        out: "internal/db/relation"
+        emit_db_tags: true
+        emit_prepared_queries: true
+        emit_empty_slices: true
+        emit_params_struct_pointers: true
+        emit_json_tags: true
+        json_tags_case_style: "snake"

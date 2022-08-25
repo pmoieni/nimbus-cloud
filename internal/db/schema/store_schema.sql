@@ -1,0 +1,10 @@
+CREATE TABLE files (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name text NOT NULL,
+    object_name text NOT NULL,
+    owner BIGINT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    UNIQUE(object_name)
+);
