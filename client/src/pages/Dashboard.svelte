@@ -58,31 +58,33 @@
 
 <div class="dashboard-page">
   <DashboardNav />
-  <div class="file-list">
-    {#if uf.length > 0}
-      {#each uf as file}
-        <FileItem
-          {refresh}
-          objectName={file.object_name}
-          fileName={file.name}
-        />
+  <div class="content">
+    <div class="file-list">
+      {#if uf.length > 0}
+        {#each uf as file}
+          <FileItem
+            {refresh}
+            objectName={file.object_name}
+            fileName={file.name}
+          />
+        {:else}
+          <p>Loading...</p>
+        {/each}
       {:else}
-        <p>Loading...</p>
-      {/each}
-    {:else}
-      <p>Nothing to see here.</p>
-    {/if}
-    {#if pf.length > 0}
-      <hr />
-      <p>Files shared with you:</p>
-      {#each pf as file}
-        <SharedFileItem objectName={file.object_name} fileName={file.name} />
+        <p>Nothing to see here.</p>
+      {/if}
+      {#if pf.length > 0}
+        <hr />
+        <p>Files shared with you:</p>
+        {#each pf as file}
+          <SharedFileItem objectName={file.object_name} fileName={file.name} />
+        {:else}
+          <p>Loading...</p>
+        {/each}
       {:else}
-        <p>Loading...</p>
-      {/each}
-    {:else}
-      <p>No one has shared any file with you.</p>
-    {/if}
+        <p>No one has shared any file with you.</p>
+      {/if}
+    </div>
   </div>
   <button on:click={toggleUploadModal} class="upload-btn btn"
     ><p>Upload</p>
@@ -121,18 +123,27 @@
       }
     }
 
-    .file-list {
-      max-width: 50rem;
+    .content {
       width: 100%;
       height: 100%;
       max-height: 96vh;
-      padding: 5rem;
       display: flex;
       align-items: center;
       flex-direction: column;
       overflow-x: hidden;
       overflow-y: auto;
-      padding: 5rem 1rem;
+
+      .file-list {
+        max-width: 50rem;
+        width: 100%;
+        height: 100%;
+        max-height: 96vh;
+        padding: 5rem;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        padding: 5rem 1rem;
+      }
     }
   }
 </style>

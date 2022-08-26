@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"net/mail"
 	"time"
@@ -58,10 +59,7 @@ func (s *AuthService) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Login the user with provided credentials
 	tokens, err := s.login(&user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	handlerError(w, err)
 
 	rtCookie := http.Cookie{
 		Path:     refreshTokenCookiePath,
@@ -83,7 +81,8 @@ func (s *AuthService) Login(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
@@ -91,15 +90,13 @@ func (s *AuthService) Login(w http.ResponseWriter, r *http.Request) {
 func (s *AuthService) Register(w http.ResponseWriter, r *http.Request) {
 	user := auth.User{}
 	if err := req.Parse(r, &user); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	err := s.register(&user)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	handlerError(w, err)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -112,10 +109,7 @@ func (s *AuthService) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokens, err := s.refreshToken(rtCookie.Value)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+	handlerError(w, err)
 
 	newRTCookie := http.Cookie{
 		Path:     refreshTokenCookiePath,
@@ -135,7 +129,8 @@ func (s *AuthService) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
@@ -160,7 +155,8 @@ func (s *AuthService) GetUsersEmailList(w http.ResponseWriter, r *http.Request) 
 	q := auth.New(s.DBCon)
 	users, err := q.ListUsers(context.Background())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -173,7 +169,8 @@ func (s *AuthService) GetUsersEmailList(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
@@ -186,10 +183,7 @@ func (s *AuthService) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := s.getUserInfo(email)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	handlerError(w, err)
 
 	res := userInfoRes{}
 	res.Username = user.Username
@@ -199,7 +193,8 @@ func (s *AuthService) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
@@ -213,7 +208,8 @@ func (s *AuthService) UpdateUserInfo(w http.ResponseWriter, r *http.Request) {
 
 	newUserInfo := auth.User{}
 	if err := req.Parse(r, &newUserInfo); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

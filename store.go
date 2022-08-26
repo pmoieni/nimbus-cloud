@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -56,7 +57,8 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 	p, err := reader.NextPart()
 	// one more field to parse, EOF is considered as failure here
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if p.FormName() != "text" {
@@ -65,13 +67,15 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 	_, err = p.Read(text)
 	if err != nil && err != io.EOF {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	// parse file field
 	p, err = reader.NextPart()
 	if err != nil && err != io.EOF {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if p.FormName() != "file" {
@@ -83,7 +87,8 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 	randName := "./bucket/" + randID
 	f, err := os.OpenFile(randName, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer f.Close()
@@ -91,11 +96,17 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 	lmt := io.MultiReader(buf, io.LimitReader(p, maxSize-511))
 	written, err := io.Copy(f, lmt)
 	if err != nil && err != io.EOF {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if written > maxSize {
-		os.Remove(f.Name())
+		err := os.Remove(f.Name())
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		http.Error(w, "file size over limit", http.StatusBadRequest)
 		return
 	}
@@ -124,13 +135,15 @@ func (s *StoreService) Upload(w http.ResponseWriter, r *http.Request) {
 	q := auth.New(s.DBCon)
 	user, err := q.GetUserByEmail(context.Background(), email)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	err = s.saveFile(randID, fileName, user.ID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
@@ -145,18 +158,21 @@ func (s *StoreService) GetUserFiles(w http.ResponseWriter, r *http.Request) {
 	q := auth.New(s.DBCon)
 	user, err := q.GetUserByEmail(context.Background(), email)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	userFiles, err := s.getUserFiles(user.ID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	permittedFiles, err := s.getUserPermittedFiles(user.ID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -169,7 +185,8 @@ func (s *StoreService) GetUserFiles(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
@@ -184,14 +201,16 @@ func (s *StoreService) PermitUsers(w http.ResponseWriter, r *http.Request) {
 
 	p := permitUsersReq{}
 	if err := req.Parse(r, &p); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	uq := auth.New(s.DBCon)
 	ownerInfo, err := uq.GetUserByEmail(context.Background(), email)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -199,12 +218,14 @@ func (s *StoreService) PermitUsers(w http.ResponseWriter, r *http.Request) {
 
 	fileInfo, err := fq.GetFileByObjectName(context.Background(), on)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	permittedUsers, err := uq.ListPermittedUsers(context.Background(), fileInfo.ID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	puEmails := permittedUsers.GetEmails()
@@ -216,12 +237,14 @@ func (s *StoreService) PermitUsers(w http.ResponseWriter, r *http.Request) {
 		if !slices.Contains(puEmails, email) && email != ownerInfo.Email {
 			userInfo, err := uq.GetUserByEmail(context.Background(), email)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				log.Println(err)
+				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 			err = s.createUserFileRelation(fileInfo.ID, userInfo.ID)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				log.Println(err)
+				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 		}
@@ -262,13 +285,15 @@ func (s *StoreService) Delete(w http.ResponseWriter, r *http.Request) {
 	on := chi.URLParam(r, "name")
 	err := s.removeFile(on)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	err = os.Remove("./bucket/" + on)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -280,14 +305,16 @@ func (s *StoreService) GetPermittedUsersEmails(w http.ResponseWriter, r *http.Re
 	fq := store.New(s.DBCon)
 	fileInfo, err := fq.GetFileByObjectName(context.Background(), on)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	uq := auth.New(s.DBCon)
 	users, err := uq.ListPermittedUsers(context.Background(), fileInfo.ID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -300,7 +327,8 @@ func (s *StoreService) GetPermittedUsersEmails(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }

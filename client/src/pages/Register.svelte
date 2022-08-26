@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { AxiosError } from "axios";
   import type { RegisterReq } from "../models/Auth";
-  import { failure } from "../toast/toast";
+  import { failure, warning } from "../toast/toast";
   import { Link, navigate } from "svelte-navigator";
   import AuthAPI from "../API/Auth";
   import { API } from "../constants/API";
@@ -24,6 +24,7 @@
       .catch((err: AxiosError) => {
         if (err.response!.status === 400) {
           failure("Check you inputs.");
+          warning(err.response.data);
           return;
         }
         if (err.response!.status === 403) {
