@@ -5,6 +5,13 @@
   import DeleteModal from "./DeleteModal.svelte";
   import { failure } from "../toast/toast";
   import DataAPI from "../API/API";
+  import type { Language } from "../models/Settings";
+  import { LanguageState } from "../store/Settings";
+
+  let language: Language;
+  LanguageState.subscribe((value) => {
+    language = value;
+  });
 
   export let fileName;
   export let objectName;
@@ -27,7 +34,7 @@
         }
       })
       .catch((err) => {
-        failure("error is: " + err);
+        failure(language.Errors.FileDownloadFailed);
       });
   }
 
@@ -68,7 +75,7 @@
 <style lang="scss">
   .file-item {
     width: 100%;
-    height: 4rem;
+    height: 5rem;
     margin: 0.5rem;
     display: flex;
     align-items: center;
@@ -79,8 +86,8 @@
     padding: 0.5rem;
 
     .file-name {
-      font-weight: bold;
       margin: 0 1rem;
+      text-overflow: ellipsis;
     }
 
     .options {
@@ -89,8 +96,8 @@
       & > button {
         border: 0;
         outline: 0;
-        height: 3.5rem;
-        width: 3.5rem;
+        height: 3rem;
+        width: 3rem;
         margin: 0.25rem;
         font-size: 1.5rem;
         border-radius: 0.3rem;

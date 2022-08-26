@@ -11,6 +11,13 @@
   import SharedFileItem from "../lib/SharedFileItem.svelte";
   import DataAPI from "../API/API";
   import { UserState } from "../store/Auth";
+  import type { Language } from "../models/Settings";
+  import { LanguageState } from "../store/Settings";
+
+  let language: Language;
+  LanguageState.subscribe((value) => {
+    language = value;
+  });
 
   let uf: File[] = null;
   let pf: File[] = null;
@@ -37,11 +44,11 @@
             }
           })
           .catch((err) => {
-            failure("Unable to fetch user files.");
+            failure(language.Errors.UserFilesFetchFailed);
           });
       })
       .catch((err) => {
-        failure("Failed to fetch user info.");
+        failure(language.Errors.UserFetchFailed);
       });
   }
 
@@ -68,26 +75,26 @@
             fileName={file.name}
           />
         {:else}
-          <p>Loading...</p>
+          <p>{language.Strings.Loading}</p>
         {/each}
       {:else}
-        <p>Nothing to see here.</p>
+        <p>{language.Strings.NothingToSeeHere}</p>
       {/if}
       {#if pf.length > 0}
         <hr />
-        <p>Files shared with you:</p>
+        <p>{language.Strings.FilesSharedWithYou}</p>
         {#each pf as file}
           <SharedFileItem objectName={file.object_name} fileName={file.name} />
         {:else}
-          <p>Loading...</p>
+          <p>{language.Strings.Loading}</p>
         {/each}
       {:else}
-        <p>No one has shared any file with you.</p>
+        <p>{language.Strings.NoOneHasSharedAnyFileWithYou}</p>
       {/if}
     </div>
   </div>
   <button on:click={toggleUploadModal} class="upload-btn btn"
-    ><p>Upload</p>
+    ><p>{language.Strings.Upload}</p>
     <Icon name="upload" /></button
   >
   {#if showUploadModal}

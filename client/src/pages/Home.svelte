@@ -1,13 +1,20 @@
 <script lang="ts">
   import { Link } from "svelte-navigator";
+  import type { Language } from "../models/Settings";
+  import { LanguageState } from "../store/Settings";
+
+  let language: Language;
+  LanguageState.subscribe((value) => {
+    language = value;
+  });
 </script>
 
 <div class="home-page">
-  <h1>Welcome to Nimbus Cloud!</h1>
+  <h1>{language.Strings.WelcomeToNimbusCloud}</h1>
   <div class="link-con">
-    <Link to="/auth/register">Register</Link>
-    <Link to="/auth/login">Login</Link>
-    <Link to="/dashboard">Open Dashboard</Link>
+    <Link to="/auth/register">{language.Strings.Register}</Link>
+    <Link to="/auth/login">{language.Strings.Login}</Link>
+    <Link to="/dashboard">{language.Strings.OpenDashboard}</Link>
   </div>
 </div>
 

@@ -2,6 +2,13 @@
   import DataAPI from "../API/API";
   import { API } from "../constants/API";
   import { failure, success, warning } from "../toast/toast";
+  import type { Language } from "../models/Settings";
+  import { LanguageState } from "../store/Settings";
+
+  let language: Language;
+  LanguageState.subscribe((value) => {
+    language = value;
+  });
 
   export let toggleModal;
   export let refresh;
@@ -18,23 +25,23 @@
       formData.append("file", selectedFile[0]);
       DataAPI.post(API.Routes.Store.Upload, formData)
         .then((res) => {
-          success("Files uploaded.");
+          success(language.Success.FileUploaded);
           toggleModal();
           refresh();
         })
         .catch((err) => {
-          failure("Failed to upload the files.");
+          failure(language.Errors.FileUploadFailed);
           toggleModal();
         });
     } else {
-      warning("You haven't selected any file.");
+      warning(language.Warnings.NoFileSelected);
     }
   }
 </script>
 
 <div on:click|self={toggleModal} class="upload-modal-con">
   <div class="upload-modal">
-    <p>Upload file</p>
+    <p>{language.Strings.Upload}</p>
     <input
       type="text"
       bind:value={fileName}
@@ -42,7 +49,7 @@
     />
     <input type="file" bind:files={selectedFile} />
     <button class="btn" disabled={uploadButtonDisabled} on:click={Upload}
-      >Upload</button
+      >{language.Strings.Upload}</button
     >
   </div>
 </div>
@@ -71,7 +78,6 @@
 
       & > p {
         font-size: 2rem;
-        font-weight: bold;
       }
 
       & > button {

@@ -5,6 +5,13 @@
   import { Link, navigate } from "svelte-navigator";
   import AuthAPI from "../API/Auth";
   import { API } from "../constants/API";
+  import type { Language } from "../models/Settings";
+  import { LanguageState } from "../store/Settings";
+
+  let language: Language;
+  LanguageState.subscribe((value) => {
+    language = value;
+  });
 
   let username = "";
   let email = "";
@@ -23,20 +30,20 @@
       })
       .catch((err: AxiosError) => {
         if (err.response!.status === 400) {
-          failure("Check you inputs.");
+          failure(language.Warnings.CheckRegisterInfo);
           warning(err.response.data);
           return;
         }
         if (err.response!.status === 403) {
-          failure("User already exists.");
+          failure(language.Errors.UserExists);
           return;
         }
         if (err.response!.status === 500) {
-          failure("An unknown error occurred.");
+          failure(language.Errors.UnknownError);
           return;
         }
 
-        failure("An unknown error occurred.");
+        failure(language.Errors.UnknownError);
       });
   }
 </script>
@@ -44,7 +51,7 @@
 <div class="register-page">
   <form on:submit|preventDefault={LoginUser}>
     <div>
-      <h2>Register</h2>
+      <h2>{language.Strings.Register}</h2>
     </div>
     <div class="input-con">
       <input
@@ -70,8 +77,8 @@
       />
     </div>
     <div class="btn-con">
-      <button type="submit">Register</button>
-      <Link to="/auth/login">Already have an account? Login</Link>
+      <button type="submit">{language.Strings.Register}</button>
+      <Link to="/auth/login">{language.Strings.AlreadyHaveAnAccount}</Link>
     </div>
   </form>
 </div>

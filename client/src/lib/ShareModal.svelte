@@ -6,6 +6,13 @@
   import DataAPI from "../API/API";
   import { UserState } from "../store/Auth";
   import type { User } from "../models/Auth";
+  import type { Language } from "../models/Settings";
+  import { LanguageState } from "../store/Settings";
+
+  let language: Language;
+  LanguageState.subscribe((value) => {
+    language = value;
+  });
 
   export let fileObjectName: string;
   export let toggleModal;
@@ -20,7 +27,6 @@
   });
 
   onMount(() => {
-    console.log("mounted");
     DataAPI.get(API.Routes.Users.Base)
       .then((res) => {
         if (res.data) {
@@ -66,30 +72,32 @@
         JSON.stringify(req)
       )
         .then((res) => {
-          success("File successfully shared.");
+          success(language.Success.FileShared);
           toggleModal();
         })
         .catch((err) => {
-          failure("File share failed.");
+          failure(language.Errors.FileShareFailed);
           toggleModal();
         });
     } else {
-      warning("You haven't selected any users.");
+      warning(language.Warnings.NoUserSelected);
     }
   }
 </script>
 
 <div on:click|self={toggleModal} class="share-modal-con">
   <div class="share-modal">
-    <p>Share</p>
-    <div class="users-list">
-      <p>recently shared:</p>
-      {#each permittedUsers as user}
-        <div style="background-color: #f3ff84;" class="user">
-          {user}
-        </div>
-      {/each}
-    </div>
+    <p>{language.Strings.Share}</p>
+    {#if permittedUsers.length > 0}
+      <div class="users-list">
+        <p>{language.Strings.RecentlyShared}</p>
+        {#each permittedUsers as user}
+          <div style="background-color: #f3ff84;" class="user">
+            {user}
+          </div>
+        {/each}
+      </div>
+    {/if}
     <div class="users-list">
       {#if users.length > 0}
         {#each users as user}
@@ -100,7 +108,7 @@
               on:click={() => toggleUser(user)}
             >
               {user}
-              <p>Selected</p>
+              <p>{language.Strings.Selected}</p>
             </div>
           {:else}
             <div class="user" on:click={() => toggleUser(user)}>
@@ -109,10 +117,10 @@
           {/if}
         {/each}
       {:else}
-        <p>file already shared with everyone</p>
+        <p>{language.Strings.FileAlreadySharedWithEveryone}</p>
       {/if}
     </div>
-    <button class="btn" on:click={Share}>Share</button>
+    <button class="btn" on:click={Share}>{language.Strings.Share}</button>
   </div>
 </div>
 
@@ -140,7 +148,6 @@
 
       & > p {
         font-size: 2rem;
-        font-weight: bold;
       }
 
       & > button {
@@ -170,7 +177,6 @@
           width: 100%;
           height: 2rem;
           font-size: 1rem;
-          font-weight: bold;
           border-bottom: 1px solid #dadada;
           display: flex;
           align-items: center;

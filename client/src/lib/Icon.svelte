@@ -16,11 +16,13 @@
   </svg>
 {/if}
 
-<style>
+<style lang="scss">
   svg {
     width: 1em;
     height: 1em;
     overflow: visible;
     transform-origin: 50% 50%;
+    display: block;
+    margin: auto;
   }
 </style>

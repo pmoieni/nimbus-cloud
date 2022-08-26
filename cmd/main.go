@@ -49,7 +49,7 @@ func main() {
 		Password: viper.GetString("REDIS_PASSWORD"),
 		DB:       0,
 	})
-	itdb := redis.NewClient(&redis.Options{
+	cidb := redis.NewClient(&redis.Options{
 		Addr:     viper.GetString("REDIS_ADDR"),
 		Password: viper.GetString("REDIS_PASSWORD"),
 		DB:       1,
@@ -65,7 +65,7 @@ func main() {
 	authService := nbc.AuthService{
 		DBCon:                db,
 		RedisRefreshTokenDB:  rtdb,
-		RedisClientIDDB:      itdb,
+		RedisClientIDDB:      cidb,
 		RedisPasswordTokenDB: ptdb,
 	}
 	server := nbc.Server{

@@ -2,6 +2,13 @@
   import DataAPI from "../API/API";
   import { API } from "../constants/API";
   import { failure, success } from "../toast/toast";
+  import type { Language } from "../models/Settings";
+  import { LanguageState } from "../store/Settings";
+
+  let language: Language;
+  LanguageState.subscribe((value) => {
+    language = value;
+  });
 
   export let fileObjectName: string;
   export let toggleModal;
@@ -10,12 +17,12 @@
   function Delete() {
     DataAPI.delete(API.Routes.Store.Base + "/" + fileObjectName)
       .then((res) => {
-        success("File deleted.");
+        success(language.Success.FileDeleted);
         toggleModal();
         refresh();
       })
       .catch((err) => {
-        failure("Failed to delete the file.");
+        failure(language.Errors.FileDeleteFailed);
         toggleModal();
       });
   }
@@ -23,11 +30,11 @@
 
 <div on:click|self={toggleModal} class="delete-modal-con">
   <div class="delete-modal">
-    <p>Delete</p>
-    <p>Are you sure?</p>
+    <p>{language.Strings.Delete}</p>
+    <p>{language.Strings.AreYouSure}</p>
     <div class="btn-con">
-      <button class="btn" on:click={Delete}>Yes</button>
-      <button class="btn" on:click={toggleModal}>No</button>
+      <button class="btn" on:click={Delete}>{language.Strings.Yes}</button>
+      <button class="btn" on:click={toggleModal}>{language.Strings.No}</button>
     </div>
   </div>
 </div>
@@ -56,7 +63,6 @@
 
       & > p {
         font-size: 2rem;
-        font-weight: bold;
       }
 
       .btn-con {

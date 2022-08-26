@@ -5,6 +5,13 @@
   import { UserState } from "../store/Auth";
   import Icon from "./Icon.svelte";
   import DataAPI from "../API/API";
+  import type { Language } from "../models/Settings";
+  import { LanguageState } from "../store/Settings";
+
+  let language: Language;
+  LanguageState.subscribe((value) => {
+    language = value;
+  });
 
   export let toggleModal;
 
@@ -27,7 +34,7 @@
     };
     DataAPI.patch(API.Routes.Users.Me, JSON.stringify(updateInfo))
       .then((res) => {
-        success("Username updated.");
+        success(language.Success.UsernameUpdated);
 
         DataAPI.get(API.Routes.Users.Me)
           .then((res) => {
@@ -36,11 +43,11 @@
             }
           })
           .catch((err) => {
-            failure("Failed to fetch user info.");
+            failure(language.Errors.UserFetchFailed);
           });
       })
       .catch((err) => {
-        failure("Failed to update the username.");
+        failure(language.Errors.UsernameUpdateFailed);
       });
   }
 </script>
@@ -48,7 +55,7 @@
 <div on:click|self={toggleModal} class="user-modal-con">
   <div class="user-modal">
     <div class="username">
-      <h5>Username:</h5>
+      <h5>{language.Strings.Username}</h5>
       <p>{userInfo.username}</p>
       <button class="edit-btn" on:click={toggleEditing}
         ><Icon name="edit" /></button
@@ -67,7 +74,7 @@
       </div>
     {/if}
     <div class="email">
-      <h5>Email:</h5>
+      <h5>{language.Strings.Email}</h5>
       <p>{userInfo.email}</p>
     </div>
   </div>
@@ -100,6 +107,7 @@
         border-radius: 0.5rem;
         margin: 0.25rem 0;
         background-color: #dadada;
+        padding: 1rem;
         display: flex;
         align-items: center;
         justify-content: space-around;
@@ -110,7 +118,6 @@
           border: none;
           outline: none;
           background-color: transparent;
-          font-weight: bold;
           color: #000000;
           font-size: 1.5rem;
         }

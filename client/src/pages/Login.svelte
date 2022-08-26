@@ -6,6 +6,13 @@
   import AuthAPI from "../API/Auth";
   import { API } from "../constants/API";
   import { AuthState } from "../store/Auth";
+  import type { Language } from "../models/Settings";
+  import { LanguageState } from "../store/Settings";
+
+  let language: Language;
+  LanguageState.subscribe((value) => {
+    language = value;
+  });
 
   let email = "";
   let password = "";
@@ -27,19 +34,19 @@
       })
       .catch((err: AxiosError) => {
         if (err.response!.status === 401) {
-          failure("Wrong email or password. try again.");
+          failure(language.Errors.WrongEmailOrPassword);
           return;
         }
         if (err.response!.status === 400) {
-          failure("Check you inputs.");
+          failure(language.Errors.CheckCredentials);
           return;
         }
         if (err.response!.status === 500) {
-          failure("An unknown error occurred.");
+          failure(language.Errors.UnknownError);
           return;
         }
 
-        failure("An unknown error occurred.");
+        failure(language.Errors.UnknownError);
       });
   }
 </script>
@@ -66,8 +73,8 @@
       />
     </div>
     <div class="btn-con">
-      <button type="submit">Login</button>
-      <Link to="/auth/register">Don't have an account yet? Register</Link>
+      <button type="submit">{language.Strings.Login}</button>
+      <Link to="/auth/register">{language.Strings.DontHaveAnAccountYet}</Link>
     </div>
   </form>
 </div>

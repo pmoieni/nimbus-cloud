@@ -19,15 +19,18 @@
 
 <style>
   @font-face {
-    font-family: raleway;
-    src: url(./assets/fonts/Raleway-Regular.ttf);
+    font-family: Vazirmatn;
+    src: url(./assets/fonts/Vazirmatn-Regular.ttf);
   }
 
-  :global(body) {
+  :global(*) {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: raleway;
+    font-family: Vazirmatn;
+  }
+
+  :global(body) {
     overflow: hidden;
   }
 
